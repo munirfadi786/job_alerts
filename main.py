@@ -32,7 +32,7 @@ def run_job_search():
     wa_token = os.getenv("WA_TOKEN")
     phone = os.getenv("MY_PHONE")
 
-    url = f"https://api.green-api.com/waInstance{wa_id}/sendMessage/{wa_token}"
+    url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
     payload = {"chatId": f"{phone}@c.us", "message": message}
     
     requests.post(url, json=payload)
