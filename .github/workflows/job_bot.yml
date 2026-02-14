@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -19,10 +19,18 @@ jobs:
 
       - name: Force Install and Run
         env:
-          # Check these names in your GitHub Settings!
+          # Ensure these match your GitHub Settings exactly!
           WA_INSTANCE_ID: ${{ secrets.WA_INSTANCE_ID }}
           WA_TOKEN: ${{ secrets.WA_TOKEN }}
           MY_PHONE: ${{ secrets.MY_PHONE }}
         run: |
-          pip install python-jobspy requests pandas
+          # 1. Install
+          python -m pip install --upgrade pip
+          python -m pip install python-jobspy requests pandas
+          
+          # 2. Locate for the log
+          echo "--- PIP LOCATION ---"
+          pip show python-jobspy | grep Location
+          
+          # 3. Run
           python main.py
