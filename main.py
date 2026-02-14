@@ -29,19 +29,44 @@ def run_job_search():
         print(sys.path)
         return
 
-    # 3. Scraping Logic
+
+# 3. Scraping Logic
     try:
-        jobs = scrape_jobs(
+        print("🔍 Searching for FRESH jobs (less than 1 hour old)...")
+        
+        # Search A: Lahore specific (100km radius)
+        jobs_lahore = scrape_jobs(
+            site_name=["linkedin", "indeed"],
+            search_term="DevOps Engineer",
+            location="Lahore",
+            distance=100, 
+            results_wanted=10,
+            hours_old=1,  # Only jobs from the last hour
+            country_indeed='pakistan'
+        )
+
+        # Search B: Remote specific (Worldwide/Pakistan market)
+        jobs_remote = scrape_jobs(
             site_name=["linkedin", "indeed"],
             search_term="DevOps Engineer",
             location="Remote",
-            results_wanted=3,
-            hours_old=24,
-            country_indeed='pk'
+            results_wanted=10,
+            hours_old=1,
+            country_indeed=''
         )
-        print(f"Found {len(jobs)} jobs.")
+
+        # Merge and clean results
+        import pandas as pd
+        jobs = pd.concat([jobs_lahore, jobs_remote]).drop_duplicates(subset=['job_url'])
+        
+        print(f"📊 Fresh jobs found: {len(jobs)}")
+        
+        # Debug: Print found titles in logs
+        for _, row in jobs.iterrows():
+            print(f"FOUND: {row['title']} at {row['company']} ({row['location']})")
+
     except Exception as e:
-        print(f"Scraper error: {e}")
+        print(f"❌ Scraper error: {e}")
         return
 
     if not jobs.empty:
