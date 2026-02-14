@@ -1,5 +1,6 @@
 import os
 import requests
+import pandas as pd
 from jobspy import scrape_jobs
 
 def run_job_search():
