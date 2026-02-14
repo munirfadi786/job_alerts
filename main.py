@@ -36,8 +36,8 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=3,
-            hours_old=1,
-            country_indeed='usa'
+            hours_old=24,
+            country_indeed='pk'
         )
         print(f"Found {len(jobs)} jobs.")
     except Exception as e:
@@ -50,6 +50,16 @@ def run_job_search():
         message = "🚀 *New DevOps Jobs Found!*\n\n"
         for _, row in jobs.iterrows():
             message += f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n\n"
+
+        # Check exactly what is being sent
+        print(f"DEBUG: Final URL: https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/HIDDEN_TOKEN")
+        print(f"DEBUG: Final ChatId: {phone}@c.us")
+        print(f"DEBUG: Jobs found to send: {len(jobs)}")
+
+        # Make the request
+        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
+        print(f"API STATUS: {response.status_code}")
+        print(f"API TEXT: {response.text}")
         
         requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
         print("📱 WhatsApp send attempted.")
