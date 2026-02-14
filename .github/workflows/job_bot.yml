@@ -1,29 +1,28 @@
 name: DevOps Job Bot
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '*/30 * * * *'
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # This helps GitHub remember the libraries
 
-      - name: Install and Run
+      - name: Force Install and Run
         env:
+          # Check these names in your GitHub Settings!
           WA_INSTANCE_ID: ${{ secrets.WA_INSTANCE_ID }}
           WA_TOKEN: ${{ secrets.WA_TOKEN }}
           MY_PHONE: ${{ secrets.MY_PHONE }}
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install python-jobspy requests pandas
+          pip install python-jobspy requests pandas
           python main.py
