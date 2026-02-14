@@ -3,7 +3,10 @@ name: DevOps Job Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'
+    # - cron: '*/30 * * * *'
+    # 04-20 covers 9 AM PKT to 1 AM PKT
+    # 21:00 covers the start of your 2 AM hour
+    - cron: '*/30 4-21 * * *'
 
 jobs:
   build:
