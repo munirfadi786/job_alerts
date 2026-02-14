@@ -1,0 +1,28 @@
+name: DevOps Job Bot
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Runs every 30 minutes
+  workflow_dispatch:        # Allows you to run it manually for testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install jobspy requests pandas
+
+      - name: Run Job Search
+        env:
+          WA_INSTANCE_ID: ${{ secrets.WA_INSTANCE_ID }}
+          WA_TOKEN: ${{ secrets.WA_TOKEN }}
+          MY_PHONE: ${{ secrets.MY_PHONE }}
+        run: python main.py
