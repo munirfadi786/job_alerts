@@ -31,37 +31,82 @@ def run_job_search():
 
 
 # 3. Scraping Logic
+    # try:
+    #     print("🔍 Searching for FRESH jobs (less than 1 hour old)...")
+        
+    #     # Search A: Lahore specific (100km radius)
+    #     jobs_lahore = scrape_jobs(
+    #         site_name=["linkedin", "indeed"],
+    #         search_term="DevOps Engineer",
+    #         location="Lahore",
+    #         distance=100, 
+    #         results_wanted=10,
+    #         hours_old=1,  # Only jobs from the last hour
+    #         country_indeed='pakistan'
+    #     )
+
+    #     # Search B: Remote specific (Worldwide/Pakistan market)
+    #     jobs_remote = scrape_jobs(
+    #         site_name=["linkedin", "indeed"],
+    #         search_term="DevOps Engineer",
+    #         location="Remote",
+    #         results_wanted=10,
+    #         hours_old=1,
+    #         country_indeed='Pakistan'
+    #     )
+
+    #     # Merge and clean results
+    #     import pandas as pd
+    #     jobs = pd.concat([jobs_lahore, jobs_remote]).drop_duplicates(subset=['job_url'])
+        
+    #     print(f"📊 Fresh jobs found: {len(jobs)}")
+        
+    #     # Debug: Print found titles in logs
+    #     for _, row in jobs.iterrows():
+    #         print(f"FOUND: {row['title']} at {row['company']} ({row['location']})")
+
+    # except Exception as e:
+    #     print(f"❌ Scraper error: {e}")
+    #     return
+
+
+    # 3. Scraping Logic
     try:
         print("🔍 Searching for FRESH jobs (less than 1 hour old)...")
         
-        # Search A: Lahore specific (100km radius)
+        # Search A: Lahore specific (Keep 'pakistan' here)
         jobs_lahore = scrape_jobs(
             site_name=["linkedin", "indeed"],
             search_term="DevOps Engineer",
             location="Lahore",
             distance=100, 
             results_wanted=10,
-            hours_old=1,  # Only jobs from the last hour
+            hours_old=1,
             country_indeed='pakistan'
         )
 
-        # Search B: Remote specific (Worldwide/Pakistan market)
+        # Search B: Remote Worldwide (Remove country_indeed here to fix the error)
+        # We focus on LinkedIn for global remote as it doesn't crash on 'Worldwide'
         jobs_remote = scrape_jobs(
-            site_name=["linkedin", "indeed"],
+            site_name=["linkedin"], 
             search_term="DevOps Engineer",
             location="Remote",
-            results_wanted=10,
-            hours_old=1,
-            country_indeed=''
+            results_wanted=15,
+            hours_old=1
         )
 
         # Merge and clean results
-        import pandas as pd
         jobs = pd.concat([jobs_lahore, jobs_remote]).drop_duplicates(subset=['job_url'])
         
+        # Optional: Extra filter to make sure they are actually remote if not in Lahore
+        if not jobs.empty:
+            jobs = jobs[
+                jobs['location'].str.contains('Lahore', case=False, na=False) | 
+                jobs['location'].str.contains('Remote', case=False, na=False)
+            ]
+
         print(f"📊 Fresh jobs found: {len(jobs)}")
         
-        # Debug: Print found titles in logs
         for _, row in jobs.iterrows():
             print(f"FOUND: {row['title']} at {row['company']} ({row['location']})")
 
