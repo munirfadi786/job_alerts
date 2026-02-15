@@ -71,85 +71,11 @@ def run_job_search():
 
 
     # 3. Scraping Logic
-    # try:
-    #     print("🔍 Searching for FRESH jobs (less than 1 hour old)...")
-        
-    #     # Search A: Lahore specific (Keep 'pakistan' here)
-    #     jobs_lahore = scrape_jobs(
-    #         site_name=["linkedin", "indeed"],
-    #         search_term="DevOps Engineer",
-    #         location="Lahore",
-    #         distance=100, 
-    #         results_wanted=10,
-    #         hours_old=24,
-    #         country_indeed='pakistan'
-    #     )
-
-    #     # Search B: Remote Worldwide (Remove country_indeed here to fix the error)
-    #     # We focus on LinkedIn for global remote as it doesn't crash on 'Worldwide'
-    #     jobs_remote = scrape_jobs(
-    #         site_name=["linkedin"], 
-    #         search_term="DevOps Engineer",
-    #         location="Remote",
-    #         results_wanted=15,
-    #         hours_old=24
-    #     )
-
-    #     # Merge and clean results
-    #     jobs = pd.concat([jobs_lahore, jobs_remote]).drop_duplicates(subset=['job_url'])
-        
-    #     # Optional: Extra filter to make sure they are actually remote if not in Lahore
-    #     if not jobs.empty:
-    #         jobs = jobs[
-    #             jobs['location'].str.contains('Lahore', case=False, na=False) | 
-    #             jobs['location'].str.contains('Remote', case=False, na=False)
-    #         ]
-
-    #     print(f"📊 Fresh jobs found: {len(jobs)}")
-        
-    #     for _, row in jobs.iterrows():
-    #         print(f"FOUND: {row['title']} at {row['company']} ({row['location']})")
-
-    # except Exception as e:
-    #     print(f"❌ Scraper error: {e}")
-    #     return
-
-    # if not jobs.empty:
-    #     import requests
-    #     url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-    #     message = "🚀 *New DevOps Jobs Found!*\n\n"
-    #     for _, row in jobs.iterrows():
-    #         message += f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n\n"
-
-    #     # Check exactly what is being sent
-    #     print(f"DEBUG: Final URL: https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/HIDDEN_TOKEN")
-    #     print(f"DEBUG: Final ChatId: {phone}@c.us")
-    #     print(f"DEBUG: Jobs found to send: {len(jobs)}")
-
-    #     # Make the request
-    #     group_id = "120363424845848567@g.us"
-    #     # response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
-    #     response = requests.post(url, json={"chatId": group_id, "message": message})
-    #     print(f"API STATUS: {response.status_code}")
-    #     print(f"API TEXT: {response.text}")
-        
-    #     requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
-    #     print("📱 WhatsApp send attempted.")
-    # else:
-    #     print("📭 No jobs to send.")
-
-
-
-
-
-
-
-    # 3. Scraping Logic
     try:
-        print("🔍 Searching for FRESH jobs (Last 24 hours)...")
+        print("🔍 Searching for FRESH jobs (less than 1 hour old)...")
         
-        # Search A: Pakistan / Lahore
-        jobs_pk = scrape_jobs(
+        # Search A: Lahore specific (Keep 'pakistan' here)
+        jobs_lahore = scrape_jobs(
             site_name=["linkedin", "indeed"],
             search_term="DevOps Engineer",
             location="Lahore",
@@ -159,8 +85,9 @@ def run_job_search():
             country_indeed='pakistan'
         )
 
-        # Search B: Global LinkedIn
-        jobs_global = scrape_jobs(
+        # Search B: Remote Worldwide (Remove country_indeed here to fix the error)
+        # We focus on LinkedIn for global remote as it doesn't crash on 'Worldwide'
+        jobs_remote = scrape_jobs(
             site_name=["linkedin"], 
             search_term="DevOps Engineer",
             location="Remote",
@@ -168,22 +95,17 @@ def run_job_search():
             hours_old=24
         )
 
-        # Search C: US Remote (This catches Zoom, Cyera, etc.)
-        jobs_us = scrape_jobs(
-            site_name=["indeed"],
-            search_term="DevOps Engineer",
-            location="Remote",
-            results_wanted=15,
-            hours_old=24,
-            country_indeed='usa'
-        )
-
-        # Merge all results
-        jobs = pd.concat([jobs_pk, jobs_global, jobs_us]).drop_duplicates(subset=['job_url'])
-
-        print(f"📊 Total jobs found before filtering: {len(jobs)}")
+        # Merge and clean results
+        jobs = pd.concat([jobs_lahore, jobs_remote]).drop_duplicates(subset=['job_url'])
         
-        # We removed the strict 'contains Lahore/Remote' filter so you don't lose US jobs
+        # Optional: Extra filter to make sure they are actually remote if not in Lahore
+        if not jobs.empty:
+            jobs = jobs[
+                jobs['location'].str.contains('Lahore', case=False, na=False) | 
+                jobs['location'].str.contains('Remote', case=False, na=False)
+            ]
+
+        print(f"📊 Fresh jobs found: {len(jobs)}")
         
         for _, row in jobs.iterrows():
             print(f"FOUND: {row['title']} at {row['company']} ({row['location']})")
@@ -192,21 +114,26 @@ def run_job_search():
         print(f"❌ Scraper error: {e}")
         return
 
-    # 4. WhatsApp Logic
     if not jobs.empty:
         import requests
         url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        group_id = "120363424845848567@g.us"
-        
-        message = "🚀 *New DevOps Jobs (Last 24h)!*\n\n"
+        message = "🚀 *New DevOps Jobs Found!*\n\n"
         for _, row in jobs.iterrows():
-            # Add location to message so you know where it's from
-            message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+            message += f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n\n"
 
-        # SEND ONLY TO GROUP (One request only)
-        response = requests.post(url, json={"chatId": group_id, "message": message})
+        # Check exactly what is being sent
+        print(f"DEBUG: Final URL: https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/HIDDEN_TOKEN")
+        print(f"DEBUG: Final ChatId: {phone}@c.us")
+        print(f"DEBUG: Jobs found to send: {len(jobs)}")
+
+        # Make the request
+        
+        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
         print(f"API STATUS: {response.status_code}")
-        print("📱 WhatsApp Group notification sent!")
+        print(f"API TEXT: {response.text}")
+        
+        requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
+        print("📱 WhatsApp send attempted.")
     else:
         print("📭 No jobs to send.")
 
