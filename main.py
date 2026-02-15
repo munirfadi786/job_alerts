@@ -154,7 +154,7 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Lahore",
             results_wanted=10,
-            hours_old=24,
+            hours_old=70,
             country_indeed='pakistan'
         )
         if not jobs_lahore.empty:
@@ -171,7 +171,7 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=15,
-            hours_old=24
+            hours_old=70
             # We don't set country_indeed here for LinkedIn
         )
         if not jobs_li.empty:
