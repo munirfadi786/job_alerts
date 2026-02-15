@@ -230,29 +230,68 @@ def run_job_search():
     except Exception as e:
         print(f"⚠️ Phase E Error: {e}")
 
+    # # --- PROCESSING & SENDING ---
+    # if all_results:
+    #     # Merge all found data
+    #     jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+    #     print(f"📊 Sending {len(jobs)} jobs to WhatsApp...")
+
+    #     import requests
+    #     url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+        
+    #     # Build the message
+    #     message = "🚀 *DevOps Job Alert (24h)*\n\n"
+    #     for _, row in jobs.iterrows():
+    #         message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+
+    #     # TARGET: Your private phone
+    #     target_chat = f"{phone}@c.us"
+        
+    #     # The actual send
+    #     response = requests.post(url, json={"chatId": target_chat, "message": message})
+    #     print(f"📡 API Status: {response.status_code}")
+    #     print(f"📡 API Response: {response.text}")
+    # else:
+    #     print("📭 No jobs found to send today.")
     # --- PROCESSING & SENDING ---
     if all_results:
-        # Merge all found data
+        # 1. Merge all found data
         jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        print(f"📊 Sending {len(jobs)} jobs to WhatsApp...")
+        print(f"📊 Total jobs found before filtering: {len(jobs)}")
 
-        import requests
-        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        
-        # Build the message
-        message = "🚀 *DevOps Job Alert (24h)*\n\n"
+        # 2. FILTER: Exclude India
+        if 'location' in jobs.columns:
+            # Keeps only rows where location does NOT contain 'India'
+            jobs = jobs[~jobs['location'].str.contains('India', case=False, na=False)]
+            print(f"✂️ Removed jobs from India. Remaining: {len(jobs)}")
+
+        # 3. FILTER: Exclude Reposted Jobs
+        if 'is_reposted' in jobs.columns:
+            # Keeps only rows where is_reposted is False or empty
+            jobs = jobs[jobs['is_reposted'] != True]
+            print(f"✂️ Removed reposted jobs. Remaining: {len(jobs)}")
+
+        # 4. FINAL LOG: Print clean data to console
         for _, row in jobs.iterrows():
-            message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+            print(f"CLEAN-DATA: {row['site']} | {row['title']} | {row['location']}")
 
-        # TARGET: Your private phone
-        target_chat = f"{phone}@c.us"
-        
-        # The actual send
-        response = requests.post(url, json={"chatId": target_chat, "message": message})
-        print(f"📡 API Status: {response.status_code}")
-        print(f"📡 API Response: {response.text}")
+        # 5. SEND TO WHATSAPP
+        if not jobs.empty:
+            import requests
+            url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+            
+            message = "🚀 *DevOps Job Alert (Fresh & Global)*\n\n"
+            for _, row in jobs.iterrows():
+                message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+
+            target_chat = f"{phone}@c.us"
+            response = requests.post(url, json={"chatId": target_chat, "message": message})
+            print(f"📡 API Status: {response.status_code}")
+        else:
+            print("📭 No jobs left after filtering.")
+            
     else:
-        print("📭 No jobs found to send today.")
+        print("📭 No raw jobs found to process.")
 
 if __name__ == "__main__":
     run_job_search()
