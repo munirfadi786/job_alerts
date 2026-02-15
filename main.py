@@ -146,6 +146,7 @@ def run_job_search():
 # --- SCRAPING LOGIC ---all_results = []
     
     # PHASE A: LAHORE
+    all_results = []
     try:
         print("🔍 Phase A: Scraping Lahore...")
         jobs_lahore = scrape_jobs(
@@ -228,7 +229,7 @@ def run_job_search():
             print("✅ Phase E Success.")
     except Exception as e:
         print(f"⚠️ Phase E Error: {e}")
-        
+
     # --- PROCESSING & SENDING ---
     if all_results:
         # Merge all found data
