@@ -143,8 +143,7 @@ def run_job_search():
 
 
 
-# --- SCRAPING LOGIC ---
-    all_results = []
+# --- SCRAPING LOGIC ---all_results = []
     
     # PHASE A: LAHORE
     try:
@@ -154,16 +153,16 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Lahore",
             results_wanted=10,
-            hours_old=70,
+            hours_old=1,
             country_indeed='pakistan'
         )
         if not jobs_lahore.empty:
             all_results.append(jobs_lahore)
-            print(f"✅ Phase A Success.")
+            print("✅ Phase A Success.")
     except Exception as e:
         print(f"⚠️ Phase A Error: {e}")
 
-    # PHASE B: LINKEDIN GLOBAL (Fixed to prevent 'jordan' error)
+    # PHASE B: LINKEDIN GLOBAL
     try:
         print("🔍 Phase B: Scraping LinkedIn Global...")
         jobs_li = scrape_jobs(
@@ -171,12 +170,11 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=15,
-            hours_old=70
-            # We don't set country_indeed here for LinkedIn
+            hours_old=1
         )
         if not jobs_li.empty:
             all_results.append(jobs_li)
-            print(f"✅ Phase B Success.")
+            print("✅ Phase B Success.")
     except Exception as e:
         print(f"⚠️ Phase B Error: {e}")
 
@@ -188,15 +186,49 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=15,
-            hours_old=24,
-            country_indeed='usa' # Forces US market
+            hours_old=1,
+            country_indeed='usa' 
         )
         if not jobs_us.empty:
             all_results.append(jobs_us)
-            print(f"✅ Phase C Success.")
+            print("✅ Phase C Success.")
     except Exception as e:
         print(f"⚠️ Phase C Error: {e}")
 
+    # PHASE D: UK REMOTE
+    try:
+        print("🔍 Phase D: Scraping UK Remote...")
+        jobs_uk = scrape_jobs(
+            site_name=["indeed"], 
+            search_term="DevOps Engineer",
+            location="Remote",
+            results_wanted=15,
+            hours_old=1,
+            country_indeed='uk' 
+        )
+        if not jobs_uk.empty:
+            all_results.append(jobs_uk)
+            print("✅ Phase D Success.")
+    except Exception as e:
+        print(f"⚠️ Phase D Error: {e}")
+
+    # PHASE E: CANADA REMOTE
+    try:
+        print("🔍 Phase E: Scraping Canada Remote...")
+        jobs_ca = scrape_jobs(
+            site_name=["indeed"], 
+            search_term="DevOps Engineer",
+            location="Remote",
+            results_wanted=15,
+            hours_old=1,
+            country_indeed='canada' # Use 'canada' instead of 'ca' to be safe
+        )
+        if not jobs_ca.empty:
+            all_results.append(jobs_ca)
+            print("✅ Phase E Success.")
+    except Exception as e:
+        print(f"⚠️ Phase E Error: {e}")
+        
     # --- PROCESSING & SENDING ---
     if all_results:
         # Merge all found data
