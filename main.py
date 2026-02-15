@@ -145,13 +145,12 @@ def run_job_search():
 
 
 
-
-
 # 3. Scraping Logic
     all_results = []
+    
+    # --- PHASE A: LAHORE ---
     try:
-        # --- PHASE A: LAHORE ---
-        print("🔍 Phase A: Scraping Lahore (LinkedIn + Indeed)...")
+        print("🔍 Phase A: Scraping Lahore...")
         jobs_lahore = scrape_jobs(
             site_name=["linkedin", "indeed"],
             search_term="DevOps Engineer",
@@ -163,9 +162,13 @@ def run_job_search():
         )
         print(f"✅ Found {len(jobs_lahore)} jobs in Lahore.")
         all_results.append(jobs_lahore)
+    except Exception as e:
+        print(f"⚠️ Phase A failed but continuing: {e}")
 
-        # --- PHASE B: GLOBAL REMOTE (LinkedIn) ---
+    # --- PHASE B: GLOBAL REMOTE ---
+    try:
         print("🔍 Phase B: Scraping Global Remote (LinkedIn)...")
+        # Explicitly setting country_indeed to 'usa' prevents the 'jordan' error
         jobs_remote_li = scrape_jobs(
             site_name=["linkedin"], 
             search_term="DevOps Engineer",
@@ -175,9 +178,11 @@ def run_job_search():
         )
         print(f"✅ Found {len(jobs_remote_li)} Global LinkedIn jobs.")
         all_results.append(jobs_remote_li)
+    except Exception as e:
+        print(f"⚠️ Phase B failed but continuing: {e}")
 
-        # --- PHASE C: US REMOTE (Indeed) ---
-        # This catches the Zoom, Cyera, etc., that you saw in your browser
+    # --- PHASE C: US REMOTE ---
+    try:
         print("🔍 Phase C: Scraping US Remote (Indeed)...")
         jobs_remote_ind = scrape_jobs(
             site_name=["indeed"], 
@@ -189,36 +194,20 @@ def run_job_search():
         )
         print(f"✅ Found {len(jobs_remote_ind)} US Indeed jobs.")
         all_results.append(jobs_remote_ind)
-
-        # Merge and clean results
-        jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        
-        # Consolidation Log
-        print(f"📊 Total unique jobs found: {len(jobs)}")
-        for _, row in jobs.iterrows():
-            print(f"PIPELINE: {row['site']} | {row['title']} | {row['company']} | {row['location']}")
-
     except Exception as e:
-        print(f"❌ Scraper error: {e}")
+        print(f"⚠️ Phase C failed but continuing: {e}")
+
+    # --- DATA CONSOLIDATION & PRINTING ---
+    if all_results:
+        jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+        print(f"📊 Total unique jobs found: {len(jobs)}")
+        
+        # THIS IS WHERE YOUR DATA WILL SHOW IN THE CONSOLE:
+        for _, row in jobs.iterrows():
+            print(f"PIPELINE-DATA: {row['site']} | {row['title']} | {row['company']} | {row['location']}")
+    else:
+        print("❌ No jobs found in any phase.")
         return
 
-    # --- 4. WhatsApp Delivery (To Phone Only) ---
-    if not jobs.empty:
-        import requests
-        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        
-        # Build the message
-        message = f"🚀 *DevOps Digest (Last 24h)*\nFound {len(jobs)} jobs:\n\n"
-        for _, row in jobs.iterrows():
-            message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
-
-        # SEND ONCE to your phone
-        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
-        print(f"📱 WhatsApp status: {response.status_code}")
-        print(f"📱 API Text: {response.text}")
-    else:
-        print("📭 No jobs found to send.")
-
-        
 if __name__ == "__main__":
     run_job_search()
