@@ -231,51 +231,66 @@ def run_job_search():
         print(f"⚠️ Phase E Error: {e}")
 
 # --- PROCESSING & SENDING ---
+
+# --- PROCESSING & SENDING ---
     if all_results:
-        # 1. Merge all found data
-        jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        print(f"📊 Total jobs found before filtering: {len(jobs)}")
-
-        # 2. FILTER: Exclude India (Keeping your working logic)
-        if 'location' in jobs.columns:
-            jobs = jobs[~jobs['location'].str.contains('India', case=False, na=False)]
-            print(f"✂️ Removed jobs from India. Remaining: {len(jobs)}")
-
-        # 3. FILTER: Exclude Reposted Jobs (Improved)
-        # Check 1: The boolean column
-        if 'is_reposted' in jobs.columns:
-            jobs = jobs[jobs['is_reposted'] != True]
+        # 1. Merge and clean base data
+        df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         
-        # Check 2: String matching for "Reposted" in Description or Title
-        # This catches LinkedIn's "Reposted 1 hour ago" text hidden in the data
-        text_cols = ['description', 'title']
-        for col in text_cols:
-            if col in jobs.columns:
-                jobs = jobs[~jobs[col].str.contains('Reposted', case=False, na=False)]
+        # Standardize location column for filtering
+        df_all['location'] = df_all['location'].fillna('').astype(str)
         
-        print(f"✂️ Removed all Reposted jobs. Remaining: {len(jobs)}")
+        # 2. SEPARATE DATA: Lahore vs. The Rest
+        # We look for "Lahore" in the location string
+        is_lahore = df_all['location'].str.contains('Lahore', case=False, na=False)
+        jobs_lahore = df_all[is_lahore].copy()
+        jobs_others = df_all[~is_lahore].copy()
 
-        # 4. FINAL LOG: Print clean data to console
-        for _, row in jobs.iterrows():
-            print(f"CLEAN-DATA: {row['site']} | {row['title']} | {row['location']}")
+        # 3. APPLY FILTERS TO NON-LAHORE JOBS ONLY
+        if not jobs_others.empty:
+            # A. Exclude India (as per your working filter)
+            jobs_others = jobs_others[~jobs_others['location'].str.contains('India', case=False, na=False)]
+            
+            # B. Exclude Reposted (Deep scan in description/title)
+            for col in ['description', 'title']:
+                if col in jobs_others.columns:
+                    jobs_others = jobs_others[~jobs_others[col].str.contains('Reposted', case=False, na=False)]
+            
+            # C. Applicant Filter: Remove if > 40 applicants
+            # JobSpy uses 'emails_count' to estimate LinkedIn/Indeed applicants
+            if 'emails_count' in jobs_others.columns:
+                jobs_others['emails_count'] = pd.to_numeric(jobs_others['emails_count'], errors='coerce').fillna(0)
+                jobs_others = jobs_others[jobs_others['emails_count'] <= 40]
+            
+            print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining.")
+
+        # 4. BUILD SEPARATE MESSAGES
+        final_message = ""
+
+        # Section 1: Lahore
+        if not jobs_lahore.empty:
+            final_message += "📍 *LAHORE - LOCAL JOBS*\n"
+            for _, row in jobs_lahore.iterrows():
+                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n\n"
+            final_message += "---\n\n"
+
+        # Section 2: Global/Remote
+        if not jobs_others.empty:
+            final_message += "🌍 *REMOTE & GLOBAL (Filtered <40 applicants)*\n"
+            for _, row in jobs_others.iterrows():
+                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
 
         # 5. SEND TO WHATSAPP
-        if not jobs.empty:
+        if final_message:
             import requests
             url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-            
-            message = "🚀 *DevOps Job Alert (Fresh & Global)*\n\n"
-            for _, row in jobs.iterrows():
-                # We use .get() to avoid errors if a column is missing
-                message += f"🔹 *{row.get('title', 'N/A')}*\n🏢 {row.get('company', 'N/A')} | 📍 {row.get('location', 'N/A')}\n🔗 {row.get('job_url', 'N/A')}\n\n"
-
             target_chat = f"{phone}@c.us"
-            response = requests.post(url, json={"chatId": target_chat, "message": message})
+            response = requests.post(url, json={"chatId": target_chat, "message": final_message})
             print(f"📡 API Status: {response.status_code}")
         else:
-            print("📭 No jobs left after filtering.")
+            print("📭 No jobs survived the filters.")
             
     else:
-        print("📭 No raw jobs found to process.")
+        print("📭 No jobs found at all.")
 if __name__ == "__main__":
     run_job_search()
