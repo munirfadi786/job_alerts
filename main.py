@@ -295,22 +295,21 @@ def run_job_search():
 # if __name__ == "__main__":
 #     run_job_search()
 
-
 # --- PROCESSING & SENDING ---
     if all_results:
         # 1. Merge all found data
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         
-        # --- DEBUG: DATA INSPECTION IN CONSOLE ---
+        # --- DEBUG: DEEP DATA INSPECTION ---
         print("\n--- 🔍 RAW DATA INSPECTION ---")
         print(f"Total Raw Jobs Found: {len(df_all)}")
-        print(f"Columns Available: {df_all.columns.tolist()}")
         
-        # This loop shows you exactly what the scraper sees for every job
+        # This loop helps us identify which columns contain the "100+ applied" info
         for _, row in df_all.iterrows():
-            apps = row.get('emails_count', 0)
-            is_rep = row.get('is_reposted', 'N/A')
-            print(f"RAW-ROW: {row['site']} | Apps: {apps} | Reposted: {is_rep} | Title: {row['title'][:40]} | Loc: {row['location']}")
+            listing = row.get('listing_type', 'N/A')
+            # Get a snippet of the description to see if "reposted" or "applicants" is written there
+            desc_text = str(row.get('description', ''))[:50].replace('\n', ' ')
+            print(f"RAW-ROW: {row['site']} | Listing: {listing} | Title: {row['title'][:30]} | Desc: {desc_text}...")
         print("-------------------------------\n")
 
         # Standardize location column
@@ -326,18 +325,20 @@ def run_job_search():
             # A. Exclude India
             jobs_others = jobs_others[~jobs_others['location'].str.contains('India', case=False, na=False)]
             
-            # B. Aggressive Reposted Filter (Scans Title, Description, and URL)
-            # Sometimes 'reposted' is hidden in the link itself
-            for col in ['description', 'title', 'job_url']:
-                if col in jobs_others.columns:
-                    jobs_others = jobs_others[~jobs_others[col].str.contains('reposted|re-posted', case=False, na=False)]
+            # B. Aggressive "Stale Job" Filter
+            # Filters out: Promoted ads, Reposted text, and High applicant phrases
+            forbidden_patterns = 'reposted|re-posted|over 100 applicants|100\+ applicants|99\+ applicants|promoted'
             
-            # C. Applicant Filter: Remove if > 40 applicants
+            for col in ['description', 'title', 'listing_type', 'job_url']:
+                if col in jobs_others.columns:
+                    jobs_others = jobs_others[~jobs_others[col].astype(str).str.contains(forbidden_patterns, case=False, na=False)]
+            
+            # C. Applicant Filter (Keeping for safety if emails_count appears)
             if 'emails_count' in jobs_others.columns:
                 jobs_others['emails_count'] = pd.to_numeric(jobs_others['emails_count'], errors='coerce').fillna(0)
                 jobs_others = jobs_others[jobs_others['emails_count'] <= 40]
             
-            print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining after removing India, Reposted, and >40 applicants.")
+            print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining.")
 
         # 4. BUILD SEPARATE MESSAGES
         final_message = ""
@@ -351,11 +352,9 @@ def run_job_search():
 
         # Section 2: Global/Remote
         if not jobs_others.empty:
-            final_message += "🌍 *REMOTE & GLOBAL (Filtered <40 applicants)*\n"
+            final_message += "🌍 *REMOTE & GLOBAL (Filtered)*\n"
             for _, row in jobs_others.iterrows():
-                # We show applicant count in the message for your verification
-                apps_info = f"👥 Apps: {int(row['emails_count'])}" if 'emails_count' in row else ""
-                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n{apps_info}\n🔗 {row['job_url']}\n\n"
+                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
 
         # 5. SEND TO WHATSAPP
         if final_message:
