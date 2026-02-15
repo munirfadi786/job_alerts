@@ -230,46 +230,30 @@ def run_job_search():
     except Exception as e:
         print(f"⚠️ Phase E Error: {e}")
 
-    # # --- PROCESSING & SENDING ---
-    # if all_results:
-    #     # Merge all found data
-    #     jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-    #     print(f"📊 Sending {len(jobs)} jobs to WhatsApp...")
-
-    #     import requests
-    #     url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        
-    #     # Build the message
-    #     message = "🚀 *DevOps Job Alert (24h)*\n\n"
-    #     for _, row in jobs.iterrows():
-    #         message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
-
-    #     # TARGET: Your private phone
-    #     target_chat = f"{phone}@c.us"
-        
-    #     # The actual send
-    #     response = requests.post(url, json={"chatId": target_chat, "message": message})
-    #     print(f"📡 API Status: {response.status_code}")
-    #     print(f"📡 API Response: {response.text}")
-    # else:
-    #     print("📭 No jobs found to send today.")
-    # --- PROCESSING & SENDING ---
+# --- PROCESSING & SENDING ---
     if all_results:
         # 1. Merge all found data
         jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         print(f"📊 Total jobs found before filtering: {len(jobs)}")
 
-        # 2. FILTER: Exclude India
+        # 2. FILTER: Exclude India (Keeping your working logic)
         if 'location' in jobs.columns:
-            # Keeps only rows where location does NOT contain 'India'
             jobs = jobs[~jobs['location'].str.contains('India', case=False, na=False)]
             print(f"✂️ Removed jobs from India. Remaining: {len(jobs)}")
 
-        # 3. FILTER: Exclude Reposted Jobs
+        # 3. FILTER: Exclude Reposted Jobs (Improved)
+        # Check 1: The boolean column
         if 'is_reposted' in jobs.columns:
-            # Keeps only rows where is_reposted is False or empty
             jobs = jobs[jobs['is_reposted'] != True]
-            print(f"✂️ Removed reposted jobs. Remaining: {len(jobs)}")
+        
+        # Check 2: String matching for "Reposted" in Description or Title
+        # This catches LinkedIn's "Reposted 1 hour ago" text hidden in the data
+        text_cols = ['description', 'title']
+        for col in text_cols:
+            if col in jobs.columns:
+                jobs = jobs[~jobs[col].str.contains('Reposted', case=False, na=False)]
+        
+        print(f"✂️ Removed all Reposted jobs. Remaining: {len(jobs)}")
 
         # 4. FINAL LOG: Print clean data to console
         for _, row in jobs.iterrows():
@@ -282,7 +266,8 @@ def run_job_search():
             
             message = "🚀 *DevOps Job Alert (Fresh & Global)*\n\n"
             for _, row in jobs.iterrows():
-                message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+                # We use .get() to avoid errors if a column is missing
+                message += f"🔹 *{row.get('title', 'N/A')}*\n🏢 {row.get('company', 'N/A')} | 📍 {row.get('location', 'N/A')}\n🔗 {row.get('job_url', 'N/A')}\n\n"
 
             target_chat = f"{phone}@c.us"
             response = requests.post(url, json={"chatId": target_chat, "message": message})
@@ -292,6 +277,5 @@ def run_job_search():
             
     else:
         print("📭 No raw jobs found to process.")
-
 if __name__ == "__main__":
     run_job_search()
