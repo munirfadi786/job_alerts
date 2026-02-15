@@ -232,37 +232,112 @@ def run_job_search():
 
 # --- PROCESSING & SENDING ---
 
+# # --- PROCESSING & SENDING ---
+#     if all_results:
+#         # 1. Merge and clean base data
+#         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+        
+#         # Standardize location column for filtering
+#         df_all['location'] = df_all['location'].fillna('').astype(str)
+        
+#         # 2. SEPARATE DATA: Lahore vs. The Rest
+#         # We look for "Lahore" in the location string
+#         is_lahore = df_all['location'].str.contains('Lahore', case=False, na=False)
+#         jobs_lahore = df_all[is_lahore].copy()
+#         jobs_others = df_all[~is_lahore].copy()
+
+#         # 3. APPLY FILTERS TO NON-LAHORE JOBS ONLY
+#         if not jobs_others.empty:
+#             # A. Exclude India (as per your working filter)
+#             jobs_others = jobs_others[~jobs_others['location'].str.contains('India', case=False, na=False)]
+            
+#             # B. Exclude Reposted (Deep scan in description/title)
+#             for col in ['description', 'title']:
+#                 if col in jobs_others.columns:
+#                     jobs_others = jobs_others[~jobs_others[col].str.contains('Reposted', case=False, na=False)]
+            
+#             # C. Applicant Filter: Remove if > 40 applicants
+#             # JobSpy uses 'emails_count' to estimate LinkedIn/Indeed applicants
+#             if 'emails_count' in jobs_others.columns:
+#                 jobs_others['emails_count'] = pd.to_numeric(jobs_others['emails_count'], errors='coerce').fillna(0)
+#                 jobs_others = jobs_others[jobs_others['emails_count'] <= 40]
+            
+#             print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining.")
+
+#         # 4. BUILD SEPARATE MESSAGES
+#         final_message = ""
+
+#         # Section 1: Lahore
+#         if not jobs_lahore.empty:
+#             final_message += "📍 *LAHORE - LOCAL JOBS*\n"
+#             for _, row in jobs_lahore.iterrows():
+#                 final_message += f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n\n"
+#             final_message += "---\n\n"
+
+#         # Section 2: Global/Remote
+#         if not jobs_others.empty:
+#             final_message += "🌍 *REMOTE & GLOBAL (Filtered <40 applicants)*\n"
+#             for _, row in jobs_others.iterrows():
+#                 final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+
+#         # 5. SEND TO WHATSAPP
+#         if final_message:
+#             import requests
+#             url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+#             target_chat = f"{phone}@c.us"
+#             response = requests.post(url, json={"chatId": target_chat, "message": final_message})
+#             print(f"📡 API Status: {response.status_code}")
+#         else:
+#             print("📭 No jobs survived the filters.")
+            
+#     else:
+#         print("📭 No jobs found at all.")
+# if __name__ == "__main__":
+#     run_job_search()
+
+
 # --- PROCESSING & SENDING ---
     if all_results:
-        # 1. Merge and clean base data
+        # 1. Merge all found data
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         
-        # Standardize location column for filtering
+        # --- DEBUG: DATA INSPECTION IN CONSOLE ---
+        print("\n--- 🔍 RAW DATA INSPECTION ---")
+        print(f"Total Raw Jobs Found: {len(df_all)}")
+        print(f"Columns Available: {df_all.columns.tolist()}")
+        
+        # This loop shows you exactly what the scraper sees for every job
+        for _, row in df_all.iterrows():
+            apps = row.get('emails_count', 0)
+            is_rep = row.get('is_reposted', 'N/A')
+            print(f"RAW-ROW: {row['site']} | Apps: {apps} | Reposted: {is_rep} | Title: {row['title'][:40]} | Loc: {row['location']}")
+        print("-------------------------------\n")
+
+        # Standardize location column
         df_all['location'] = df_all['location'].fillna('').astype(str)
         
         # 2. SEPARATE DATA: Lahore vs. The Rest
-        # We look for "Lahore" in the location string
         is_lahore = df_all['location'].str.contains('Lahore', case=False, na=False)
         jobs_lahore = df_all[is_lahore].copy()
         jobs_others = df_all[~is_lahore].copy()
 
         # 3. APPLY FILTERS TO NON-LAHORE JOBS ONLY
         if not jobs_others.empty:
-            # A. Exclude India (as per your working filter)
+            # A. Exclude India
             jobs_others = jobs_others[~jobs_others['location'].str.contains('India', case=False, na=False)]
             
-            # B. Exclude Reposted (Deep scan in description/title)
-            for col in ['description', 'title']:
+            # B. Aggressive Reposted Filter (Scans Title, Description, and URL)
+            # Sometimes 'reposted' is hidden in the link itself
+            for col in ['description', 'title', 'job_url']:
                 if col in jobs_others.columns:
-                    jobs_others = jobs_others[~jobs_others[col].str.contains('Reposted', case=False, na=False)]
+                    jobs_others = jobs_others[~jobs_others[col].str.contains('reposted|re-posted', case=False, na=False)]
             
             # C. Applicant Filter: Remove if > 40 applicants
-            # JobSpy uses 'emails_count' to estimate LinkedIn/Indeed applicants
             if 'emails_count' in jobs_others.columns:
                 jobs_others['emails_count'] = pd.to_numeric(jobs_others['emails_count'], errors='coerce').fillna(0)
                 jobs_others = jobs_others[jobs_others['emails_count'] <= 40]
             
-            print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining.")
+            print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining after removing India, Reposted, and >40 applicants.")
 
         # 4. BUILD SEPARATE MESSAGES
         final_message = ""
@@ -278,7 +353,9 @@ def run_job_search():
         if not jobs_others.empty:
             final_message += "🌍 *REMOTE & GLOBAL (Filtered <40 applicants)*\n"
             for _, row in jobs_others.iterrows():
-                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+                # We show applicant count in the message for your verification
+                apps_info = f"👥 Apps: {int(row['emails_count'])}" if 'emails_count' in row else ""
+                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n{apps_info}\n🔗 {row['job_url']}\n\n"
 
         # 5. SEND TO WHATSAPP
         if final_message:
@@ -292,5 +369,6 @@ def run_job_search():
             
     else:
         print("📭 No jobs found at all.")
+
 if __name__ == "__main__":
     run_job_search()
