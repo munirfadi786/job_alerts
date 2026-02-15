@@ -143,71 +143,83 @@ def run_job_search():
 
 
 
-
-
-# 3. Scraping Logic
+# --- SCRAPING LOGIC ---
     all_results = []
     
-    # --- PHASE A: LAHORE ---
+    # PHASE A: LAHORE
     try:
         print("🔍 Phase A: Scraping Lahore...")
         jobs_lahore = scrape_jobs(
             site_name=["linkedin", "indeed"],
             search_term="DevOps Engineer",
             location="Lahore",
-            distance=100, 
-            results_wanted=15,
+            results_wanted=10,
             hours_old=24,
             country_indeed='pakistan'
         )
-        print(f"✅ Found {len(jobs_lahore)} jobs in Lahore.")
-        all_results.append(jobs_lahore)
+        if not jobs_lahore.empty:
+            all_results.append(jobs_lahore)
+            print(f"✅ Phase A Success.")
     except Exception as e:
-        print(f"⚠️ Phase A failed but continuing: {e}")
+        print(f"⚠️ Phase A Error: {e}")
 
-    # --- PHASE B: GLOBAL REMOTE ---
+    # PHASE B: LINKEDIN GLOBAL (Fixed to prevent 'jordan' error)
     try:
-        print("🔍 Phase B: Scraping Global Remote (LinkedIn)...")
-        # Explicitly setting country_indeed to 'usa' prevents the 'jordan' error
-        jobs_remote_li = scrape_jobs(
+        print("🔍 Phase B: Scraping LinkedIn Global...")
+        jobs_li = scrape_jobs(
             site_name=["linkedin"], 
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=15,
             hours_old=24
+            # We don't set country_indeed here for LinkedIn
         )
-        print(f"✅ Found {len(jobs_remote_li)} Global LinkedIn jobs.")
-        all_results.append(jobs_remote_li)
+        if not jobs_li.empty:
+            all_results.append(jobs_li)
+            print(f"✅ Phase B Success.")
     except Exception as e:
-        print(f"⚠️ Phase B failed but continuing: {e}")
+        print(f"⚠️ Phase B Error: {e}")
 
-    # --- PHASE C: US REMOTE ---
+    # PHASE C: US REMOTE
     try:
-        print("🔍 Phase C: Scraping US Remote (Indeed)...")
-        jobs_remote_ind = scrape_jobs(
+        print("🔍 Phase C: Scraping US Remote...")
+        jobs_us = scrape_jobs(
             site_name=["indeed"], 
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=15,
             hours_old=24,
-            country_indeed='usa'
+            country_indeed='usa' # Forces US market
         )
-        print(f"✅ Found {len(jobs_remote_ind)} US Indeed jobs.")
-        all_results.append(jobs_remote_ind)
+        if not jobs_us.empty:
+            all_results.append(jobs_us)
+            print(f"✅ Phase C Success.")
     except Exception as e:
-        print(f"⚠️ Phase C failed but continuing: {e}")
+        print(f"⚠️ Phase C Error: {e}")
 
-    # --- DATA CONSOLIDATION & PRINTING ---
+    # --- PROCESSING & SENDING ---
     if all_results:
+        # Merge all found data
         jobs = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        print(f"📊 Total unique jobs found: {len(jobs)}")
+        print(f"📊 Sending {len(jobs)} jobs to WhatsApp...")
+
+        import requests
+        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
         
-        # THIS IS WHERE YOUR DATA WILL SHOW IN THE CONSOLE:
+        # Build the message
+        message = "🚀 *DevOps Job Alert (24h)*\n\n"
         for _, row in jobs.iterrows():
-            print(f"PIPELINE-DATA: {row['site']} | {row['title']} | {row['company']} | {row['location']}")
+            message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+
+        # TARGET: Your private phone
+        target_chat = f"{phone}@c.us"
+        
+        # The actual send
+        response = requests.post(url, json={"chatId": target_chat, "message": message})
+        print(f"📡 API Status: {response.status_code}")
+        print(f"📡 API Response: {response.text}")
     else:
-        print("❌ No jobs found in any phase.")
-        return
+        print("📭 No jobs found to send today.")
 
 if __name__ == "__main__":
     run_job_search()
