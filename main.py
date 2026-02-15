@@ -81,7 +81,7 @@ def run_job_search():
             location="Lahore",
             distance=100, 
             results_wanted=10,
-            hours_old=1,
+            hours_old=24,
             country_indeed='pakistan'
         )
 
@@ -92,7 +92,7 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Remote",
             results_wanted=15,
-            hours_old=1
+            hours_old=24
         )
 
         # Merge and clean results
@@ -127,7 +127,9 @@ def run_job_search():
         print(f"DEBUG: Jobs found to send: {len(jobs)}")
 
         # Make the request
-        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
+        group_id = "120363424845848567@g.us"
+        # response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": message})
+        response = requests.post(url, json={"chatId": group_id, "message": message})
         print(f"API STATUS: {response.status_code}")
         print(f"API TEXT: {response.text}")
         
