@@ -296,29 +296,13 @@ def run_job_search():
 #     run_job_search()
 
 
+
+
+
 # --- PROCESSING & SENDING ---
     if all_results:
-        # 1. Merge all found data
+        # 1. Merge and clean base data
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        
-        # --- DEBUG: DEEP DATA INSPECTION ---
-        print("\n--- 🔍 DEEP COLUMN SCAN (First 2 Jobs) ---")
-        if not df_all.empty:
-            # We take a sample to see exactly what data is in every column
-            sample_jobs = df_all.head(2)
-            for i, (idx, row) in enumerate(sample_jobs.iterrows()):
-                print(f"\n--- JOB #{i+1} FULL DATA DUMP ---")
-                for col in df_all.columns:
-                    val = row[col]
-                    # If description is too long, we only show the first 100 chars
-                    if col == 'description' and val:
-                        print(f"{col}: {str(val)[:100]}...")
-                    else:
-                        print(f"{col}: {val}")
-                print("-" * 30)
-        print("--- END OF DEEP SCAN ---\n")
-
-        # Standardize location column
         df_all['location'] = df_all['location'].fillna('').astype(str)
         
         # 2. SEPARATE DATA: Lahore vs. The Rest
@@ -326,56 +310,55 @@ def run_job_search():
         jobs_lahore = df_all[is_lahore].copy()
         jobs_others = df_all[~is_lahore].copy()
 
-        # 3. APPLY FILTERS TO NON-LAHORE JOBS ONLY
+        # 3. APPLY FILTERS TO GLOBAL JOBS (Excluding India & Non-Remote)
         if not jobs_others.empty:
-            # A. Exclude India
+            # Only keep jobs marked as Remote
+            if 'is_remote' in jobs_others.columns:
+                jobs_others = jobs_others[jobs_others['is_remote'] == True]
+            
+            # EXCLUDE INDIA (Still strictly here)
             jobs_others = jobs_others[~jobs_others['location'].str.contains('India', case=False, na=False)]
             
-            # B. Aggressive "Stale Job" Filter
-            # Scans Title, Description, Listing Type, and URL for repost/applicant keywords
-            forbidden_patterns = 'reposted|re-posted|over 100 applicants|100\+ applicants|99\+ applicants|promoted'
-            
-            for col in ['description', 'title', 'listing_type', 'job_url']:
-                if col in jobs_others.columns:
-                    jobs_others = jobs_others[~jobs_others[col].astype(str).str.contains(forbidden_patterns, case=False, na=False)]
-            
-            # C. Applicant Filter (In case emails_count or vacancy_count is populated)
-            # We filter > 40 for global jobs
-            for app_col in ['emails_count', 'vacancy_count']:
-                if app_col in jobs_others.columns:
-                    jobs_others[app_col] = pd.to_numeric(jobs_others[app_col], errors='coerce').fillna(0)
-                    jobs_others = jobs_others[jobs_others[app_col] <= 40]
+            # TITLE CLEANUP (Remove Reposts)
+            jobs_others = jobs_others[~jobs_others['title'].str.contains('reposted|re-posted', case=False, na=False)]
             
             print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining.")
 
-        # 4. BUILD SEPARATE MESSAGES
-        final_message = ""
+        # 4. BUILD THE MESSAGE
+        message_parts = []
 
-        # Section 1: Lahore
+        # Section 1: Lahore (Handle "No Jobs" case)
+        message_parts.append("📍 *LAHORE - LOCAL JOBS*")
         if not jobs_lahore.empty:
-            final_message += "📍 *LAHORE - LOCAL JOBS*\n"
             for _, row in jobs_lahore.iterrows():
-                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n\n"
-            final_message += "---\n\n"
+                message_parts.append(f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n")
+        else:
+            message_parts.append("_No local jobs found in the last hour._\n")
+
+        message_parts.append("---") # Visual Separator
 
         # Section 2: Global/Remote
+        message_parts.append("🌍 *REMOTE ONLY (Global)*")
         if not jobs_others.empty:
-            final_message += "🌍 *REMOTE & GLOBAL (Filtered)*\n"
             for _, row in jobs_others.iterrows():
-                final_message += f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n\n"
+                message_parts.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
+        else:
+            message_parts.append("_No fresh remote jobs found after filtering._")
+
+        # Combine all parts into one string
+        final_message = "\n".join(message_parts)
 
         # 5. SEND TO WHATSAPP
-        if final_message:
-            import requests
-            url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-            target_chat = f"{phone}@c.us"
-            response = requests.post(url, json={"chatId": target_chat, "message": final_message})
-            print(f"📡 API Status: {response.status_code}")
-        else:
-            print("📭 No jobs survived the filters.")
+        import requests
+        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+        target_chat = f"{phone}@c.us"
+        response = requests.post(url, json={"chatId": target_chat, "message": final_message})
+        
+        print(f"📡 API Status: {response.status_code}")
+        print(f"📊 Final Stats: Lahore: {len(jobs_lahore)} | Global: {len(jobs_others)}")
             
     else:
-        print("📭 No jobs found at all.")
+        print("📭 No jobs found in any phase.")
 
 if __name__ == "__main__":
     run_job_search()
