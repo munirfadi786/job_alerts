@@ -295,22 +295,28 @@ def run_job_search():
 # if __name__ == "__main__":
 #     run_job_search()
 
+
 # --- PROCESSING & SENDING ---
     if all_results:
         # 1. Merge all found data
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         
         # --- DEBUG: DEEP DATA INSPECTION ---
-        print("\n--- 🔍 RAW DATA INSPECTION ---")
-        print(f"Total Raw Jobs Found: {len(df_all)}")
-        
-        # This loop helps us identify which columns contain the "100+ applied" info
-        for _, row in df_all.iterrows():
-            listing = row.get('listing_type', 'N/A')
-            # Get a snippet of the description to see if "reposted" or "applicants" is written there
-            desc_text = str(row.get('description', ''))[:50].replace('\n', ' ')
-            print(f"RAW-ROW: {row['site']} | Listing: {listing} | Title: {row['title'][:30]} | Desc: {desc_text}...")
-        print("-------------------------------\n")
+        print("\n--- 🔍 DEEP COLUMN SCAN (First 2 Jobs) ---")
+        if not df_all.empty:
+            # We take a sample to see exactly what data is in every column
+            sample_jobs = df_all.head(2)
+            for i, (idx, row) in enumerate(sample_jobs.iterrows()):
+                print(f"\n--- JOB #{i+1} FULL DATA DUMP ---")
+                for col in df_all.columns:
+                    val = row[col]
+                    # If description is too long, we only show the first 100 chars
+                    if col == 'description' and val:
+                        print(f"{col}: {str(val)[:100]}...")
+                    else:
+                        print(f"{col}: {val}")
+                print("-" * 30)
+        print("--- END OF DEEP SCAN ---\n")
 
         # Standardize location column
         df_all['location'] = df_all['location'].fillna('').astype(str)
@@ -326,17 +332,19 @@ def run_job_search():
             jobs_others = jobs_others[~jobs_others['location'].str.contains('India', case=False, na=False)]
             
             # B. Aggressive "Stale Job" Filter
-            # Filters out: Promoted ads, Reposted text, and High applicant phrases
+            # Scans Title, Description, Listing Type, and URL for repost/applicant keywords
             forbidden_patterns = 'reposted|re-posted|over 100 applicants|100\+ applicants|99\+ applicants|promoted'
             
             for col in ['description', 'title', 'listing_type', 'job_url']:
                 if col in jobs_others.columns:
                     jobs_others = jobs_others[~jobs_others[col].astype(str).str.contains(forbidden_patterns, case=False, na=False)]
             
-            # C. Applicant Filter (Keeping for safety if emails_count appears)
-            if 'emails_count' in jobs_others.columns:
-                jobs_others['emails_count'] = pd.to_numeric(jobs_others['emails_count'], errors='coerce').fillna(0)
-                jobs_others = jobs_others[jobs_others['emails_count'] <= 40]
+            # C. Applicant Filter (In case emails_count or vacancy_count is populated)
+            # We filter > 40 for global jobs
+            for app_col in ['emails_count', 'vacancy_count']:
+                if app_col in jobs_others.columns:
+                    jobs_others[app_col] = pd.to_numeric(jobs_others[app_col], errors='coerce').fillna(0)
+                    jobs_others = jobs_others[jobs_others[app_col] <= 40]
             
             print(f"✂️ Global Filtered: {len(jobs_others)} jobs remaining.")
 
