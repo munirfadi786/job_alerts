@@ -222,7 +222,7 @@ def run_job_search():
         search_term="DevOps Engineer",
          location="Lahore",
           results_wanted=10,
-           hours_old=24)
+           hours_old=5)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI Lahore Error: {e}")
 
@@ -233,7 +233,7 @@ def run_job_search():
          search_term="DevOps Engineer",
           location="Lahore",
            results_wanted=10,
-            hours_old=24, 
+            hours_old=5, 
             country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed Lahore Error: {e}")
@@ -245,7 +245,7 @@ def run_job_search():
          search_term="DevOps Engineer",
           location="Pakistan",
            is_remote=True,
-            results_wanted=10, hours_old=24)
+            results_wanted=10, hours_old=5)
 
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI PK Remote Error: {e}")
@@ -258,7 +258,7 @@ def run_job_search():
          location="Remote",
           is_remote=True,
            results_wanted=10,
-            hours_old=24,
+            hours_old=5,
              country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed PK Remote Error: {e}")
