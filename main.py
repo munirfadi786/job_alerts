@@ -154,7 +154,7 @@ def run_job_search():
             search_term="DevOps Engineer",
             location="Lahore",
             results_wanted=10,
-            hours_old=1,
+            hours_old=24,
             country_indeed='pakistan'
         )
         if not jobs_lahore.empty:
