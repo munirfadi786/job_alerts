@@ -270,13 +270,13 @@ def run_job_search():
         bad_keys = 'database|data platform|data engineer|dba'
         df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
-        df_all['location'] = df_all['location'].fillna('').astype(str)
+        # df_all['location'] = df_all['location'].fillna('').astype(str)
+        df_all['location'] = df_all['location'].fillna('Pakistan').replace('', 'Pakistan')
+
         
         # --- 3. WHATSAPP GROUPING ---
         is_local = df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)
         is_uae = df_all['location'].str.contains('United Arab Emirates|UAE|Dubai|Abu Dhabi', case=False, na=False)
-        
-        # Global must be Remote AND not PK/UAE
         is_global = ~(is_local | is_uae)
         if 'is_remote' in df_all.columns:
             is_global = is_global & (df_all['is_remote'] == True)
