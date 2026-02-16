@@ -1,5 +1,6 @@
 import os
 import sys
+import requests
 
 def run_job_search():
     # 1. Print Debug Information
