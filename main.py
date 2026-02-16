@@ -302,7 +302,7 @@ def run_job_search():
                 msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}\n")
 
         # Section: Global
-        global_df = df_all[is_global].head(10)
+        global_df = df_all[is_global]
         if not global_df.empty:
             msg.append("---")
             msg.append("🌍 *GLOBAL REMOTE*")
