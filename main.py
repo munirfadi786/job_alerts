@@ -222,7 +222,7 @@ def run_job_search():
         search_term="DevOps Engineer",
          location="Lahore",
           results_wanted=10,
-           hours_old=3)
+           hours_old=24)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI Lahore Error: {e}")
 
@@ -233,7 +233,7 @@ def run_job_search():
          search_term="DevOps Engineer",
           location="Lahore",
            results_wanted=10,
-            hours_old=3, 
+            hours_old=24, 
             country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed Lahore Error: {e}")
@@ -245,7 +245,7 @@ def run_job_search():
          search_term="DevOps Engineer",
           location="Pakistan",
            is_remote=True,
-            results_wanted=10, hours_old=3)
+            results_wanted=10, hours_old=24)
 
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI PK Remote Error: {e}")
@@ -258,7 +258,7 @@ def run_job_search():
          location="Remote",
           is_remote=True,
            results_wanted=10,
-            hours_old=3,
+            hours_old=24,
              country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed PK Remote Error: {e}")
@@ -323,8 +323,9 @@ def run_job_search():
         is_local = df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)
         is_uae = df_all['location'].str.contains('United Arab Emirates|UAE|Dubai|Abu Dhabi', case=False, na=False)
         is_global = ~(is_local | is_uae)
+
         if 'is_remote' in df_all.columns:
-            is_global = is_global & (df_all['is_remote'] == True)
+            is_global = is_global & ((df_all['is_remote'] == True) | (df_all['location'] == ''))
 
         # --- 4. BUILD MESSAGE ---
         msg = []
