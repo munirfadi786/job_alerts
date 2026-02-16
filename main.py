@@ -234,7 +234,7 @@ def run_job_search():
           location="Lahore",
            results_wanted=10,
             hours_old=3, 
-            'country_indeed='pk')
+            country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed Lahore Error: {e}")
 
