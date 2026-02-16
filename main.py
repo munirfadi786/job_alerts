@@ -218,44 +218,89 @@ def run_job_search():
 # A: LinkedIn Lahore
     try:
         print("🔍 Searching: LinkedIn Lahore...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=24)
+        res = scrape_jobs(site_name=["linkedin"], 
+        search_term="DevOps Engineer",
+         location="Lahore",
+          results_wanted=10,
+           hours_old=3)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI Lahore Error: {e}")
 
     # B: Indeed Lahore
     try:
         print("🔍 Searching: Indeed Lahore...")
-        res = scrape_jobs(site_name=["indeed"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=24, country_indeed='pakistan')
+        res = scrape_jobs(site_name=["indeed"],
+         search_term="DevOps Engineer",
+          location="Lahore",
+           results_wanted=10,
+            hours_old=3, 
+            'country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed Lahore Error: {e}")
 
     # C: LinkedIn Pakistan Remote
     try:
         print("🔍 Searching: LinkedIn PK Remote...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Pakistan", is_remote=True, results_wanted=15, hours_old=24)
+        res = scrape_jobs(site_name=["linkedin"],
+         search_term="DevOps Engineer",
+          location="Pakistan",
+           is_remote=True,
+            results_wanted=10, hours_old=3)
+
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI PK Remote Error: {e}")
 
     # D: Indeed Pakistan Remote
     try:
         print("🔍 Searching: Indeed PK Remote...")
-        res = scrape_jobs(site_name=["indeed"], search_term="DevOps Engineer", location="Remote", is_remote=True, results_wanted=10, hours_old=24, country_indeed='pakistan')
+        res = scrape_jobs(site_name=["indeed"], 
+        search_term="DevOps Engineer",
+         location="Remote",
+          is_remote=True,
+           results_wanted=10,
+            hours_old=3,
+             country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed PK Remote Error: {e}")
 
     # E: UAE All DevOps
     try:
         print("🔍 Searching: UAE...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="United Arab Emirates", results_wanted=15, hours_old=24)
+        res = scrape_jobs(site_name=["linkedin"],
+         search_term="DevOps Engineer",
+          location="United Arab Emirates",
+           results_wanted=15, hours_old=3)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ UAE Error: {e}")
 
     # F: Global Remote
+# F1: Global Remote - LinkedIn
     try:
-        print("🔍 Searching: Global Remote...")
-        res = scrape_jobs(site_name=["linkedin", "indeed"], search_term="DevOps Engineer", location="Remote", is_remote=True, results_wanted=20, hours_old=2)
-        if not res.empty: all_results.append(res)
-    except Exception as e: print(f"⚠️ Global Error: {e}")
+        print("🔍 Searching: Global Remote (LinkedIn)...")
+        res_li = scrape_jobs(
+            site_name=["linkedin"], 
+            search_term="DevOps Engineer", 
+            location="Remote", 
+            is_remote=True, 
+            results_wanted=20, 
+            hours_old=2
+        )
+        if not res_li.empty: all_results.append(res_li)
+    except Exception as e: print(f"⚠️ Global LinkedIn Error: {e}")
+
+    # F2: Global Remote - Indeed
+    try:
+        print("🔍 Searching: Global Remote (Indeed)...")
+        res_in = scrape_jobs(
+            site_name=["indeed"], 
+            search_term="DevOps Engineer", 
+            location="Remote", 
+            is_remote=True, 
+            results_wanted=20, 
+            hours_old=2
+        )
+        if not res_in.empty: all_results.append(res_in)
+    except Exception as e: print(f"⚠️ Global Indeed Error: {e}")
 
     # --- 2. PROCESSING ---
     if all_results:
