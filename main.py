@@ -315,8 +315,8 @@ def run_job_search():
         bad_keys = 'database|data platform|data engineer|dba'
         df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
-        # df_all['location'] = df_all['location'].fillna('').astype(str)
-        df_all['location'] = df_all['location'].fillna('Pakistan').replace('', 'Pakistan')
+        df_all['location'] = df_all['location'].fillna('').astype(str)
+        # df_all['location'] = df_all['location'].fillna('Pakistan').replace('Pakistan')
 
         
         # --- 3. WHATSAPP GROUPING ---
