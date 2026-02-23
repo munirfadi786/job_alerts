@@ -221,21 +221,21 @@ def run_job_search():
     # A1: LinkedIn Lahore
     try:
         print("🔍 Searching: LinkedIn Lahore...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=24)
+        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=2)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI Lahore Error: {e}")
 
     # A2: Indeed Lahore
     try:
         print("🔍 Searching: Indeed Lahore...")
-        res = scrape_jobs(site_name=["indeed"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=24, country_indeed='pakistan')
+        res = scrape_jobs(site_name=["indeed"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=2, country_indeed='pakistan')
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Indeed Lahore Error: {e}")
 
     # A3: LinkedIn Pakistan Remote
     try:
         print("🔍 Searching: LinkedIn PK Remote...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Pakistan", is_remote=True, results_wanted=10, hours_old=24)
+        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Pakistan", is_remote=True, results_wanted=10, hours_old=2)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ LI PK Remote Error: {e}")
 
@@ -249,7 +249,7 @@ def run_job_search():
     # --- PHASE B: UAE (STRICTLY ORIGINAL) ---
     try:
         print("🔍 Searching: UAE...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="United Arab Emirates", results_wanted=15, hours_old=24)
+        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="United Arab Emirates", results_wanted=15, hours_old=2)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ UAE Error: {e}")
 
@@ -281,18 +281,13 @@ def run_job_search():
                 search_term="DevOps Engineer", 
                 location=country['name'], 
                 results_wanted=50, 
-                hours_old=24
+                hours_old=1
             )
-            if not res_eu.empty: all_results.append(res_eu)
-        except Exception as e: print(f"⚠️ {country['name']} Error: {e}")
-
-    # --- 2. PROCESSING ---
-    if all_results:
-        df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+            if not res_eu.empty: all_results.append(res_ob_url'])
         df_all['location'] = df_all['location'].fillna('').astype(str)
         
         # Noise Filter
-        bad_keys = 'database|data platform|data engineer|dba'
+        bad_keys = 'database|data platform|data engineer|dba|software developer|machine learning engineering'
         df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
         # --- 3. WHATSAPP MESSAGE BUILDING ---
@@ -303,33 +298,66 @@ def run_job_search():
         if not local_df.empty:
             msg.append("\n📍 *LAHORE & PK REMOTE*")
             for _, row in local_df.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} ({row['site']})\n🔗 {row['job_url']}")
+                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']eu)
+        except Exception as e: print(f"⚠️ {country['name']} Error: {e}")
+# --- 2. PROCESSING ---
+    if all_results:
+        df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+        df_all['location'] = df_all['location'].fillna('').astype(str)
+        
+        # Noise Filter (same as before)
+        bad_keys = 'database|data platform|data engineer|dba'
+        df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
-        # 2. UAE Section
-        uae_df = df_all[df_all['location'].str.contains('United Arab Emirates|UAE|Dubai', case=False, na=False)]
-        if not uae_df.empty:
-            msg.append("\n🇦🇪 *UAE DEVOPS*")
-            for _, row in uae_df.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']}\n🔗 {row['job_url']}")
+        # --- 3. WHATSAPP SENDING HELPER ---
+        # This function sends messages line-by-line and counts them
+        def send_section(title, dataframe):
+            if dataframe.empty:
+                return
+            
+            msg_header = f"🚀 *{title} REPORT*"
+            job_list = []
+            count = 1
+            
+            for _, row in dataframe.iterrows():
+                # Formatting each job line-by-line with a number
+                job_entry = f"{count}. *{row['title']}*\n🏢 {row['company']}\n📍 {row['location']}\n🔗 {row['job_url']}\n"
+                job_list.append(job_entry)
+                count += 1
+                
+                # If the message gets too long, send what we have and start a new chunk
+                if len("\n".join(job_list)) > 3000:
+                    chunk_msg = msg_header + "\n" + "\n".join(job_list)
+                    requests.post(url, json={"chatId": f"{phone}@c.us", "message": chunk_msg})
+                    job_list = [] # Reset for next chunk
+                    msg_header = f"🚀 *{title} (Continued)*"
 
-        # 3. SCHENGEN Section
-        # Matches any country in our list
-        schengen_names = "|".join([c['name'] for c in schengen_countries])
-        eur_df = df_all[df_all['location'].str.contains(schengen_names, case=False, na=False)]
-        if not eur_df.empty:
-            msg.append("\n🇪🇺 *SCHENGEN AREA*")
-            for _, row in eur_df.iterrows():
-                msg.append(f"🔹 *{row['title']}* | 📍 {row['location']}\n🏢 {row['company']}\n🔗 {row['job_url']}")
+            # Send final remaining jobs in the section
+            if job_list:
+                final_chunk = msg_header + "\n" + "\n".join(job_list)
+                requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_chunk})
+                print(f"✅ Sent section: {title}")
 
-        final_msg = "\n".join(msg)
-        if len(final_msg) > 4000: final_msg = final_msg[:4000] + "..."
-
-        # --- 4. SEND ---
+        # --- 4. CATEGORIZE AND SEND ---
         url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
-        print("📡 Report Sent to WhatsApp!")
-    else:
-        print("📭 No jobs found.")
 
-if __name__ == "__main__":
-    run_job_search()
+        # Section 1: Lahore/Pakistan (Separate)
+        pk_df = df_all[df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)]
+        send_section("LAHORE & PK REMOTE", pk_df)
+
+        # Section 2: UAE (Separate)
+        uae_df = df_all[df_all['location'].str.contains('United Arab Emirates|UAE|Dubai', case=False, na=False)]
+        send_section("UAE DEVOPS", uae_df)
+
+        # Section 3: Sweden (Separate as priority)
+        sw_df = df_all[df_all['location'].str.contains('Sweden|Stockholm', case=False, na=False)]
+        send_section("SWEDEN DEVOPS", sw_df)
+
+        # Section 4: Rest of Schengen (Country by Country)
+        # We loop through countries to keep them distinct in your message
+        remaining_eur_df = df_all[~df_all['location'].str.contains('Lahore|Pakistan|UAE|Dubai|Sweden', case=False, na=False)]
+        if not remaining_eur_df.empty:
+            send_section("EUROPE / OTHER SCHENGEN", remaining_eur_df)
+
+    else:
+        print("📭 No jobs found today.")
