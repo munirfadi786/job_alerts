@@ -190,132 +190,114 @@
 
 
 
-
-
-
-
 import os
-import sys
 import requests
 import pandas as pd
 import time
+import random
 
 def run_job_search():
-    # --- 1. DEBUG & SETUP ---
     wa_id = os.getenv("WA_INSTANCE_ID")
     wa_token = os.getenv("WA_TOKEN")
     phone = os.getenv("MY_PHONE")
 
     try:
         from jobspy import scrape_jobs
-        print("✅ Jobspy loaded successfully!")
     except ImportError:
-        print("❌ Failed to load Jobspy.")
+        print("❌ Jobspy not found.")
         return
 
     all_results = []
     url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
 
-    # --- PHASE A: LAHORE & PAKISTAN (ORIGINAL) ---
-    try:
-        print("🔍 Searching: LinkedIn Lahore...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=2)
-        if not res.empty: all_results.append(res)
-    except Exception as e: print(f"⚠️ LI Lahore Error: {e}")
-
-    try:
-        print("🔍 Searching: Indeed Lahore...")
-        res = scrape_jobs(site_name=["indeed"], search_term="DevOps Engineer", location="Lahore", results_wanted=10, hours_old=2, country_indeed='pakistan')
-        if not res.empty: all_results.append(res)
-    except Exception as e: print(f"⚠️ Indeed Lahore Error: {e}")
-
-    try:
-        print("🔍 Searching: LinkedIn PK Remote...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="Pakistan", is_remote=True, results_wanted=10, hours_old=2)
-        if not res.empty: all_results.append(res)
-    except Exception as e: print(f"⚠️ LI PK Remote Error: {e}")
-
-    # --- PHASE B: UAE (ORIGINAL) ---
-    try:
-        print("🔍 Searching: UAE...")
-        res = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location="United Arab Emirates", results_wanted=15, hours_old=3)
-        if not res.empty: all_results.append(res)
-    except Exception as e: print(f"⚠️ UAE Error: {e}")
-
-    # --- PHASE C: SCHENGEN LOOP ---
-    schengen_countries = [
-        {"name": "Sweden", "code": "se"}, {"name": "Germany", "code": "de"},
-        {"name": "France", "code": "fr"}, {"name": "Italy", "code": "it"},
-        {"name": "Spain", "code": "es"}, {"name": "Netherlands", "code": "nl"},
-        {"name": "Switzerland", "code": "ch"}, {"name": "Belgium", "code": "be"},
-        {"name": "Austria", "code": "at"}, {"name": "Luxembourg", "code": "lu"}
+    # --- PHASE 1: HIGH PRIORITY (Lahore, PK Remote, UAE) ---
+    priority_targets = [
+        {"site": ["linkedin", "indeed"], "loc": "Lahore", "term": "DevOps Engineer"},
+        {"site": ["linkedin"], "loc": "Pakistan", "term": "DevOps Engineer", "remote": True},
+        {"site": ["linkedin"], "loc": "United Arab Emirates", "term": "DevOps Engineer"}
     ]
 
-    for country in schengen_countries:
+    for target in priority_targets:
         try:
-            print(f"🔍 Searching: {country['name']}...")
-            res_eu = scrape_jobs(site_name=["linkedin"], search_term="DevOps Engineer", location=country['name'], results_wanted=5, hours_old=48)
-            if not res_eu.empty: all_results.append(res_eu)
-            time.sleep(1) 
-        except Exception as e: 
-            print(f"⚠️ {country['name']} Error: {e}")
+            print(f"🔍 Searching Priority: {target['loc']}...")
+            res = scrape_jobs(
+                site_name=target['site'],
+                search_term=target['term'],
+                location=target['loc'],
+                is_remote=target.get("remote", False),
+                results_wanted=15,
+                hours_old=72,
+                country_indeed='pakistan' if 'pakistan' in target['loc'].lower() or 'lahore' in target['loc'].lower() else None
+            )
+            if not res.empty: all_results.append(res)
+            time.sleep(random.uniform(5, 8))
+        except Exception as e:
+            print(f"⚠️ Error in {target['loc']}: {e}")
 
-    # --- 2. PROCESSING ---
+    # --- PHASE 2: TOP 5 SCHENGEN HUBS ---
+    top_schengen = ["Germany", "Netherlands", "Sweden", "Switzerland", "France"]
+
+    for country in top_schengen:
+        try:
+            print(f"🔍 Searching Schengen Hub: {country}...")
+            res_eu = scrape_jobs(
+                site_name=["linkedin"],
+                search_term="DevOps Engineer",
+                location=country,
+                results_wanted=10,
+                hours_old=72
+            )
+            if not res_eu.empty: all_results.append(res_eu)
+            # Longer delay between countries to stay under the radar
+            time.sleep(random.uniform(10, 15))
+        except Exception as e:
+            print(f"⚠️ {country} Blocked/Error: {e}")
+
+    # --- PHASE 3: PROCESSING & REPORTING ---
     if all_results:
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         df_all['location'] = df_all['location'].fillna('').astype(str)
-        bad_keys = 'database|data platform|data engineer|dba'
+        
+        # Filter out irrelevant titles
+        bad_keys = 'database|dba|data engineer'
         df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
-        # --- 3. LOGGING & WHATSAPP FUNCTION ---
-        def process_and_send(title, df_section):
-            if df_section.empty: 
-                print(f"ℹ️ Section {title}: No jobs found.")
-                return
+        def send_section(title, df_section):
+            if df_section.empty: return
             
-            # Action Console Output
-            print(f"\n--- CONSOLE LOG: {title} ---")
+            # Print to Actions Console
+            print(f"\n--- {title} ---")
             
-            header = f"🚀 *{title} ({len(df_section)} Jobs Found)*\n"
-            lines = []
+            msg_header = f"🚀 *{title} ({len(df_section)} Jobs)*\n"
+            job_lines = []
+            
             for i, (_, row) in enumerate(df_section.iterrows(), 1):
-                # Clean text for console
-                print(f"{i}. {row['title']} | {row['company']} | {row['location']}")
+                # Clean console log
+                print(f"{i}. {row['title']} | {row['company']}")
                 
-                # Format for WhatsApp
-                entry = f"{i}. *{row['title']}*\n🏢 {row['company']}\n📍 {row['location']}\n🔗 {row['job_url']}\n"
-                lines.append(entry)
+                # WhatsApp format
+                line = f"{i}. *{row['title']}*\n🏢 {row['company']}\n📍 {row['location']}\n🔗 {row['job_url']}\n"
+                job_lines.append(line)
                 
-                # Split WhatsApp message if too long
-                if len("\n".join(lines)) > 3000:
-                    requests.post(url, json={"chatId": f"{phone}@c.us", "message": header + "\n".join(lines)})
-                    lines = []
-                    header = f"🚀 *{title} (Continued)*\n"
+                # Split WhatsApp message if it gets too long
+                if len("\n".join(job_lines)) > 3000:
+                    requests.post(url, json={"chatId": f"{phone}@c.us", "message": msg_header + "\n".join(job_lines)})
+                    job_lines = []
+                    msg_header = f"🚀 *{title} (Continued)*\n"
 
-            if lines:
-                requests.post(url, json={"chatId": f"{phone}@c.us", "message": header + "\n".join(lines)})
-            print(f"✅ WhatsApp Section '{title}' Sent.")
+            if job_lines:
+                requests.post(url, json={"chatId": f"{phone}@c.us", "message": msg_header + "\n".join(job_lines)})
 
-        # --- 4. CATEGORIZE & RUN ---
-        # 1. Lahore & PK
-        pk_df = df_all[df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)]
-        process_and_send("LAHORE & PK", pk_df)
+        # Split into your requested categories
+        pk_mask = df_all['location'].str.contains('Lahore|Pakistan', case=False)
+        uae_mask = df_all['location'].str.contains('United Arab Emirates|UAE|Dubai', case=False)
+        
+        send_section("PAKISTAN & LAHORE", df_all[pk_mask])
+        send_section("UAE DEVOPS", df_all[uae_mask])
+        send_section("EUROPE TOP 5", df_all[~(pk_mask | uae_mask)])
 
-        # 2. UAE
-        uae_df = df_all[df_all['location'].str.contains('United Arab Emirates|UAE|Dubai', case=False, na=False)]
-        process_and_send("UAE DEVOPS", uae_df)
-
-        # 3. Sweden
-        swe_df = df_all[df_all['location'].str.contains('Sweden|Stockholm', case=False, na=False)]
-        process_and_send("SWEDEN", swe_df)
-
-        # 4. Other Schengen
-        others_df = df_all[~df_all['location'].str.contains('Lahore|Pakistan|UAE|Dubai|Sweden', case=False, na=False)]
-        process_and_send("OTHER SCHENGEN", others_df)
-
-        print("\n--- ALL TASKS COMPLETED ---")
     else:
-        print("📭 No jobs found in any region.")
+        print("📭 No jobs found. Check GitHub Action logs for errors.")
 
 if __name__ == "__main__":
     run_job_search()
