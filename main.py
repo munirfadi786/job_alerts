@@ -245,7 +245,7 @@ def run_job_search():
                 search_term="DevOps Engineer",
                 location=country,
                 results_wanted=10,
-                hours_old=72
+                hours_old=1
             )
             if not res_eu.empty: all_results.append(res_eu)
             # Longer delay between countries to stay under the radar
