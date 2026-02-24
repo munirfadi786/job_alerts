@@ -226,7 +226,7 @@ def run_job_search():
                 location=target['loc'],
                 is_remote=target.get("remote", False),
                 results_wanted=15,
-                hours_old=72,
+                hours_old=5,
                 country_indeed='pakistan' if 'pakistan' in target['loc'].lower() or 'lahore' in target['loc'].lower() else None
             )
             if not res.empty: all_results.append(res)
