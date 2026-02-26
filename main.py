@@ -1,35 +1,35 @@
-# import os
-# import sys
-# import requests
-# import pandas as pd
+import os
+import sys
+import requests
+import pandas as pd
 
-# def run_job_search():
-#     # 1. Print Debug Information
-#     print("--- DEBUGGING ENVIRONMENT ---")
-#     print(f"Python Executable: {sys.executable}")
+def run_job_search():
+    # 1. Print Debug Information
+    print("--- DEBUGGING ENVIRONMENT ---")
+    print(f"Python Executable: {sys.executable}")
     
-#     # Check Secrets
-#     def mask(s):
-#         return f"{s[:4]}****{s[-4:]}" if s and len(s) > 8 else "EMPTY ❌"
+    # Check Secrets
+    def mask(s):
+        return f"{s[:4]}****{s[-4:]}" if s and len(s) > 8 else "EMPTY ❌"
 
-#     wa_id = os.getenv("WA_INSTANCE_ID")
-#     wa_token = os.getenv("WA_TOKEN")
-#     phone = os.getenv("MY_PHONE")
+    wa_id = os.getenv("WA_INSTANCE_ID")
+    wa_token = os.getenv("WA_TOKEN")
+    phone = os.getenv("MY_PHONE")
 
-#     print(f"WA_INSTANCE_ID: {wa_id if wa_id else 'EMPTY ❌'}")
-#     print(f"WA_TOKEN: {mask(wa_token)}")
-#     print(f"MY_PHONE: {mask(phone)}")
-#     print("----------------------------")
+    print(f"WA_INSTANCE_ID: {wa_id if wa_id else 'EMPTY ❌'}")
+    print(f"WA_TOKEN: {mask(wa_token)}")
+    print(f"MY_PHONE: {mask(phone)}")
+    print("----------------------------")
 
-#     # 2. Import Libraries inside the function
-#     try:
-#         from jobspy import scrape_jobs
-#         import pandas as pd
-#         print("✅ Jobspy loaded successfully!")
-#     except ImportError:
-#         print("❌ Still failing to load Jobspy. Printing sys.path:")
-#         print(sys.path)
-#         return
+    # 2. Import Libraries inside the function
+    try:
+        from jobspy import scrape_jobs
+        import pandas as pd
+        print("✅ Jobspy loaded successfully!")
+    except ImportError:
+        print("❌ Still failing to load Jobspy. Printing sys.path:")
+        print(sys.path)
+        return
 
 
 
