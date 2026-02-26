@@ -38,8 +38,8 @@ def run_job_search():
     # PHASE A: LAHORE
     all_results = []
     SEARCH_TERM = ["DevOps Engineer", "Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "DevSecOps Engineer", "Cloud Infrastructure Engineer", "Automation Engineer", "Kubernetes Engineer", "Azure Engineer", "AWS Engineer",]
-    RESULTS_COUNT = 50
-    RECENCY_HOURS = 2
+    RESULTS_WANTED = 50
+    HOURS_OLD = 2
 
 # A: LinkedIn Lahore
     try:
