@@ -37,7 +37,7 @@ def run_job_search():
 
     # PHASE A: LAHORE
     all_results = []
-    SEARCH_TERMS = ["DevOps Engineer", "Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "DevSecOps Engineer", "Cloud Infrastructure Engineer", "Automation Engineer", "Kubernetes Engineer", "Azure Engineer", "AWS Engineer",]
+    SEARCH_TERM = ["DevOps Engineer", "Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "DevSecOps Engineer", "Cloud Infrastructure Engineer", "Automation Engineer", "Kubernetes Engineer", "Azure Engineer", "AWS Engineer",]
     RESULTS_COUNT = 50
     RECENCY_HOURS = 2
 
