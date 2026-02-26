@@ -37,7 +37,9 @@ def run_job_search():
 
     # PHASE A: LAHORE
     all_results = []
-    SEARCH_TERM = ["DevOps Engineer", "Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "DevSecOps Engineer", "Cloud Infrastructure Engineer", "Automation Engineer", "Kubernetes Engineer", "Azure Engineer", "AWS Engineer",]
+    SEARCH_LIST = ["DevOps Engineer", "Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "DevSecOps Engineer", "Cloud Infrastructure Engineer", "Automation Engineer", "Kubernetes Engineer", "Azure Engineer", "AWS Engineer",]
+
+    SEARCH_TERM = " OR ".join(SEARCH_LIST)
     RESULTS_WANTED = 50
     HOURS_OLD = 2
 
@@ -137,6 +139,94 @@ def run_job_search():
 
 
 
+
+
+
+
+
+
+
+
+
+
+    # --- 2. PROCESSING ---
+    if all_results:
+        df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+        
+        # CONSOLE OUTPUT (Every job found)
+        print("\n--- CONSOLE LOG: RAW JOBS ---")
+        for _, row in df_all.iterrows():
+            print(f"[{row.get('site', 'job')}] {row['title']} | {row['company']} | {row['location']}")
+
+        # NOISE FILTER (Data/Database)
+        bad_keys = 'database|data platform|data engineer|dba'
+        df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
+
+        df_all['location'] = df_all['location'].fillna('').astype(str)
+
+        # --- 3. WHATSAPP GROUPING (Updated for Europe) ---
+        is_local = df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)
+        is_europe = df_all['location'].str.contains('Sweden|Luxembourg|France|Germany', case=False, na=False)
+
+        # --- 4. BUILD MESSAGE ---
+        msg = []
+        
+        # Section: Lahore & PK Remote
+        msg.append("📍 *LAHORE & PK REMOTE*")
+        local_df = df_all[is_local]
+        if not local_df.empty:
+            for _, row in local_df.iterrows():
+                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} ({row['site']})\n🔗 {row['job_url']}\n")
+        else:
+            msg.append("_No local jobs found._\n")
+
+        # Section: Europe
+        msg.append("---")
+        msg.append("🇪🇺 *EUROPE DEVOPS (SE, LU, FR, DE)*")
+        euro_df = df_all[is_europe]
+        if not euro_df.empty:
+            for _, row in euro_df.iterrows():
+                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
+        else:
+            msg.append("_No jobs found in Europe._\n")
+
+        final_msg = "\n".join(msg)
+
+        # --- 5. SEND ---
+        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
+        print(f"\n📡 WhatsApp Status: {response.status_code}")
+            
+    else:
+        print("📭 No jobs found.")
+
+if __name__ == "__main__":
+    run_job_search()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
 #     # --- 2. PROCESSING ---
 #     if all_results:
 #         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
@@ -204,73 +294,3 @@ def run_job_search():
 #     run_job_search()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # --- 2. PROCESSING ---
-    if all_results:
-        df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        
-        # CONSOLE OUTPUT (Every job found)
-        print("\n--- CONSOLE LOG: RAW JOBS ---")
-        for _, row in df_all.iterrows():
-            print(f"[{row.get('site', 'job')}] {row['title']} | {row['company']} | {row['location']}")
-
-        # NOISE FILTER (Data/Database)
-        bad_keys = 'database|data platform|data engineer|dba'
-        df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
-
-        df_all['location'] = df_all['location'].fillna('').astype(str)
-
-        # --- 3. WHATSAPP GROUPING (Updated for Europe) ---
-        is_local = df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)
-        is_europe = df_all['location'].str.contains('Sweden|Luxembourg|France|Germany', case=False, na=False)
-
-        # --- 4. BUILD MESSAGE ---
-        msg = []
-        
-        # Section: Lahore & PK Remote
-        msg.append("📍 *LAHORE & PK REMOTE*")
-        local_df = df_all[is_local]
-        if not local_df.empty:
-            for _, row in local_df.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} ({row['site']})\n🔗 {row['job_url']}\n")
-        else:
-            msg.append("_No local jobs found._\n")
-
-        # Section: Europe
-        msg.append("---")
-        msg.append("🇪🇺 *EUROPE DEVOPS (SE, LU, FR, DE)*")
-        euro_df = df_all[is_europe]
-        if not euro_df.empty:
-            for _, row in euro_df.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
-        else:
-            msg.append("_No jobs found in Europe._\n")
-
-        final_msg = "\n".join(msg)
-
-        # --- 5. SEND ---
-        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
-        print(f"\n📡 WhatsApp Status: {response.status_code}")
-            
-    else:
-        print("📭 No jobs found.")
-
-if __name__ == "__main__":
-    run_job_search()
