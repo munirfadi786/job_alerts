@@ -159,14 +159,22 @@ def run_job_search():
             print(f"[{row.get('site', 'job')}] {row['title']} | {row['company']} | {row['location']}")
 
         # NOISE FILTER (Data/Database)
-        bad_keys = 'database|data platform|data engineer|dba'
+        good_keys = 'devops|sre|reliability|platform|infrastructure|cloud engineer|kubernetes'
+        df_all = df_all[df_all['title'].str.contains(good_keys, case=False, na=False)]
+        bad_keys = 'database|data platform|data engineer|dba|fullstack|software engineer|developer|scientist|testare'
         df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
         df_all['location'] = df_all['location'].fillna('').astype(str)
 
         # --- 3. WHATSAPP GROUPING (Updated for Europe) ---
-        is_local = df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)
-        is_europe = df_all['location'].str.contains('Sweden|Luxembourg|France|Germany', case=False, na=False)
+        # is_local = df_all['location'].str.contains('Lahore|Pakistan', case=False, na=False)
+        # is_europe = df_all['location'].str.contains('Sweden|Luxembourg|France|Germany', case=False, na=False)
+
+        # --- 3. WHATSAPP GROUPING ---
+        is_local = df_all['location'].str.contains('Lahore|Pakistan|Islamabad|Karachi', case=False, na=False)
+
+        # Added major cities for the 4 countries to ensure no jobs are missed
+        is_europe = df_all['location'].str.contains('Sweden|Stockholm|Gothenburg|Luxembourg|France|Paris|Lyon|Germany|Berlin|Munich|Hamburg|Frankfurt', case=False, na=False)
 
         # --- 4. BUILD MESSAGE ---
         msg = []
