@@ -41,7 +41,7 @@ def run_job_search():
 
     SEARCH_TERM = " OR ".join(SEARCH_LIST)
     RESULTS_WANTED = 500
-    HOURS_OLD = 120
+    HOURS_OLD = 3
 
 # A: LinkedIn Lahore
     try:
