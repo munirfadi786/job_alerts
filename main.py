@@ -102,34 +102,43 @@ def run_job_search():
     except Exception as e: print(f"⚠️ Sweden Error: {e}")
 
     # F: Luxembourg
-    # try:
-    #     print("🔍 Searching: Luxembourg...")
-    #     res = scrape_jobs(site_name=["linkedin"],
-    #      search_term=SEARCH_TERM,
-    #       location="Luxembourg",
-    #        results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
-    #     if not res.empty: all_results.append(res)
-    # except Exception as e: print(f"⚠️ Luxembourg Error: {e}")
+    try:
+        print("🔍 Searching: Luxembourg...")
+        res = scrape_jobs(site_name=["linkedin"],
+         search_term=SEARCH_TERM,
+          location="Luxembourg",
+           results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
+        if not res.empty: all_results.append(res)
+    except Exception as e: print(f"⚠️ Luxembourg Error: {e}")
 
     # G: France
-    # try:
-    #     print("🔍 Searching: France...")
-    #     res = scrape_jobs(site_name=["linkedin"],
-    #      search_term=SEARCH_TERM,
-    #       location="France",
-    #        results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
-    #     if not res.empty: all_results.append(res)
-    # except Exception as e: print(f"⚠️ France Error: {e}")
+    try:
+        print("🔍 Searching: France...")
+        res = scrape_jobs(site_name=["linkedin"],
+         search_term=SEARCH_TERM,
+          location="France",
+           results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
+        if not res.empty: all_results.append(res)
+    except Exception as e: print(f"⚠️ France Error: {e}")
 
     # # H: Germany
-    # try:
-    #     print("🔍 Searching: Germany...")
-    #     res = scrape_jobs(site_name=["linkedin"],
-    #      search_term=SEARCH_TERM,
-    #       location="Germany",
-    #        results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
-    #     if not res.empty: all_results.append(res)
-    # except Exception as e: print(f"⚠️ Germany Error: {e}")
+    try:
+        print("🔍 Searching: Germany...")
+        res = scrape_jobs(site_name=["linkedin"],
+         search_term=SEARCH_TERM,
+          location="Germany",
+           results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
+        if not res.empty: all_results.append(res)
+    except Exception as e: print(f"⚠️ Germany Error: {e}")
+
+    try:
+        print("🔍 Searching: Germany...")
+        res = scrape_jobs(site_name=["linkedin"],
+         search_term=SEARCH_TERM,
+          location="Finland",
+           results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
+        if not res.empty: all_results.append(res)
+    except Exception as e: print(f"⚠️ Germany Error: {e}")
 
 
 
