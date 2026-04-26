@@ -258,67 +258,71 @@ def run_job_search():
 
 
 
-
-
-
 # --- 2. PROCESSING ---
     if all_results:
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
-        
-        # Save Excel (Safe Mode)
-        try:
-            today = datetime.now().strftime("%Y-%m-%d")
-            excel_file = f"Jobs_{today}.xlsx"
-            df_all.to_excel(excel_file, index=False)
-            print(f"✅ Excel saved: {excel_file}")
-        except Exception as e:
-            print(f"⚠️ Excel save skipped: {e}")
-
-        # --- NOISE FILTER & CATEGORIZATION ---
         df_all['location'] = df_all['location'].fillna('').astype(str)
-        
-        # Define filters based on your lists at the top
+
+        # 1. Define the Skills
         cloud_regex = 'devops|sre|reliability|platform|infrastructure|cloud|kubernetes|azure|aws'
         dev_regex = 'fullstack|node|python|django|mern|developer'
-        
-        # Create separate DataFrames
-        df_cloud = df_all[df_all['title'].str.contains(cloud_regex, case=False, na=False)]
-        df_dev = df_all[df_all['title'].str.contains(dev_regex, case=False, na=False)]
-        
-        # --- 3. BUILD MESSAGE ---
-        msg = ["🚀 *NEW JOB ALERTS*"]
 
-        # SECTION 1: CLOUD & DEVOPS
-        msg.append("\n☁️ *CLOUD & DEVOPS ROLES*")
-        if not df_cloud.empty:
-            for _, row in df_cloud.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
-        else:
-            msg.append("_No Cloud jobs found in this run._\n")
+        # 2. Define the Countries to group by
+        # We use a list to keep the order you want
+        target_locations = [
+            ("🇵🇰 PAKISTAN", "Lahore|Pakistan|Islamabad|Karachi"),
+            ("🇸🇪 SWEDEN", "Sweden|Stockholm|Gothenburg"),
+            ("🇫🇷 FRANCE", "France|Paris|Lyon"),
+            ("🇩🇪 GERMANY", "Germany|Berlin|Munich|Hamburg|Frankfurt"),
+            ("🇮🇹 ITALY", "Italy"),
+            ("🇪🇸 SPAIN", "Spain"),
+            ("🇦🇹 AUSTRIA", "Austria"),
+            ("🇨🇦 CANADA", "Canada")
+        ]
 
-        msg.append("---")
+        msg = ["🚀 *JOB REPORT BY LOCATION*"]
 
-        # SECTION 2: SOFTWARE DEVELOPMENT
-        msg.append("\n💻 *SOFTWARE & DEV ROLES*")
-        if not df_dev.empty:
-            for _, row in df_dev.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
-        else:
-            msg.append("_No Dev jobs found in this run._\n")
+        # 3. Nested Loop: For each Country, find Cloud vs Dev
+        for label, regex in target_locations:
+            # Filter all jobs for this specific country/city
+            country_df = df_all[df_all['location'].str.contains(regex, case=False, na=False)]
+            
+            if not country_df.empty:
+                msg.append(f"\n📍 *{label}*")
+                
+                # Sub-filter: Cloud
+                c_df = country_df[country_df['title'].str.contains(cloud_regex, case=False, na=False)]
+                if not c_df.empty:
+                    msg.append("  ☁️ *Cloud:*")
+                    for _, row in c_df.iterrows():
+                        msg.append(f"  • {row['title']} @ {row['company']}\n    🔗 {row['job_url']}")
+                
+                # Sub-filter: Dev
+                d_df = country_df[country_df['title'].str.contains(dev_regex, case=False, na=False)]
+                if not d_df.empty:
+                    msg.append("  💻 *Dev:*")
+                    for _, row in d_df.iterrows():
+                        msg.append(f"  • {row['title']} @ {row['company']}\n    🔗 {row['job_url']}")
+                msg.append("---")
 
         final_msg = "\n".join(msg)
 
-        # --- 4. SEND ---
+        # 4. SEND (Try/Except to prevent crash)
         if wa_id and wa_token and phone:
             url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-            response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
-            print(f"📡 WhatsApp Status: {response.status_code}")
-        else:
-            print("❌ Secret keys missing. Message not sent.")
+            try:
+                # Save Raw Excel first just in case
+                today = datetime.now().strftime("%Y-%m-%d")
+                df_all.to_excel(f"Jobs_{today}.xlsx", index=False)
+                
+                # Send WhatsApp
+                requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
+                print("✅ Report Sent Successfully")
+            except Exception as e:
+                print(f"⚠️ Error during output: {e}")
             
     else:
         print("📭 No jobs found.")
-
 
 if __name__ == "__main__":
     run_job_search()
