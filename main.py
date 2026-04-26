@@ -160,7 +160,7 @@ def run_job_search():
     # K: Austria
     try:
         print("🔍 Searching: Austria...")
-        res = scrape_jobs(site_name=["linkedin"], search_term=SEARCH_TERM, location="Austria", results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
+        res = scrape_jobs(site_name=["linkedin"], search_term=SEARCH_TERM, location="Australia", results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
         if not res.empty: all_results.append(res)
     except Exception as e: print(f"⚠️ Austria Error: {e}")
 
@@ -276,7 +276,7 @@ def run_job_search():
             ("🇩🇪 GERMANY", "Germany|Berlin|Munich|Hamburg|Frankfurt"),
             ("🇮🇹 ITALY", "Italy"),
             ("🇪🇸 SPAIN", "Spain"),
-            ("🇦🇹 AUSTRIA", "Austria"),
+            ("🇦🇺 AUSTRALIA", "Australia"),
             ("🇨🇦 CANADA", "Canada")
         ]
 
@@ -295,14 +295,14 @@ def run_job_search():
                 if not c_df.empty:
                     msg.append("  ☁️ *Cloud:*")
                     for _, row in c_df.iterrows():
-                        msg.append(f"  • {row['title']} @ {row['company']}\n    🔗 {row['job_url']}")
+                        msg.append(f"  • *{row['title']}* @ {row['company']}\n    🔗 {row['job_url']}")
                 
                 # Sub-filter: Dev
                 d_df = country_df[country_df['title'].str.contains(dev_regex, case=False, na=False)]
                 if not d_df.empty:
                     msg.append("  💻 *Dev:*")
                     for _, row in d_df.iterrows():
-                        msg.append(f"  • {row['title']} @ {row['company']}\n    🔗 {row['job_url']}")
+                        msg.append(f"  • *{row['title']}* @ {row['company']}\n    🔗 {row['job_url']}")
                 msg.append("---")
 
         final_msg = "\n".join(msg)
