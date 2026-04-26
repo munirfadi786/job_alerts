@@ -263,26 +263,32 @@ def run_job_search():
 
 
 
-
-
-    # --- 2. PROCESSING ---
+# --- 2. PROCESSING ---
     if all_results:
+        # Combine all results and remove duplicates based on the URL
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         
-        # 1. Save to Excel FIRST (with timestamp)
-        today = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        excel_file = f"Jobs_{today}.xlsx"
-        df_all.to_excel(excel_file, index=False)
-        print(f"✅ Excel saved: {excel_file}")
+        # 1. Save to Excel (Safe Mode)
+        # This is wrapped in try/except so if 'openpyxl' is missing, the script doesn't crash
+        try:
+            today = datetime.now().strftime("%Y-%m-%d_%H-%M")
+            excel_file = f"Jobs_{today}.xlsx"
+            df_all.to_excel(excel_file, index=False)
+            print(f"✅ Excel saved: {excel_file}")
+        except Exception as e:
+            print(f"⚠️ Excel save failed (likely missing openpyxl): {e}")
 
-        # 2. CONSOLE OUTPUT 
+        # 2. CONSOLE OUTPUT (Every job found before filtering)
         print("\n--- CONSOLE LOG: RAW JOBS ---")
         for _, row in df_all.iterrows():
             print(f"[{row.get('site', 'job')}] {row['title']} | {row['company']} | {row['location']}")
 
         # 3. NOISE FILTER
+        # Keep only roles matching your interests
         good_keys = 'devops|sre|reliability|platform|infrastructure|cloud engineer|kubernetes|developer|fullstack|node|python|django|mern'
         df_all = df_all[df_all['title'].str.contains(good_keys, case=False, na=False)]
+        
+        # Remove noisy data roles
         bad_keys = 'cientist|testare'
         df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
 
@@ -295,6 +301,7 @@ def run_job_search():
         # 5. BUILD MESSAGE
         msg = ["🚀 *LATEST TECH JOBS*"]
         
+        # Section A: Local & Remote Pakistan
         msg.append("\n📍 *LAHORE & PK REMOTE*")
         local_df = df_all[is_local]
         if not local_df.empty:
@@ -303,6 +310,7 @@ def run_job_search():
         else:
             msg.append("_No local jobs found._\n")
 
+        # Section B: International
         msg.append("---\n🌍 *INTERNATIONAL (EU/CA/REMOTE)*")
         euro_df = df_all[is_europe]
         if not euro_df.empty:
@@ -314,16 +322,18 @@ def run_job_search():
         final_msg = "\n".join(msg)
 
         # 6. SEND WHATSAPP
-        url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-        response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
-        print(f"📡 WhatsApp Status: {response.status_code}")
+        if wa_id and wa_token and phone:
+            url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+            try:
+                response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
+                print(f"📡 WhatsApp Status: {response.status_code}")
+            except Exception as e:
+                print(f"❌ WhatsApp API Error: {e}")
+        else:
+            print("❌ WhatsApp Secrets missing. Skipping message.")
             
     else:
         print("📭 No jobs found.")
 
 if __name__ == "__main__":
     run_job_search()
-
-
-
-
