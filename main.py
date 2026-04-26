@@ -44,7 +44,7 @@ def run_job_search():
     SEARCH_LIST = cloud + dev
     SEARCH_TERM = " OR ".join(SEARCH_LIST)
     RESULTS_WANTED = 1000
-    HOURS_OLD = 6
+    HOURS_OLD = 3
 
 # A: LinkedIn Lahore
     try:
@@ -319,6 +319,6 @@ def run_job_search():
     else:
         print("📭 No jobs found.")
 
-        
+
 if __name__ == "__main__":
     run_job_search()
