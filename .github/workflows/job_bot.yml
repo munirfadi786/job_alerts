@@ -3,9 +3,7 @@ name: DevOps Job Bot
 on:
   workflow_dispatch:
   schedule:
-    # - cron: '*/30 * * * *'
-    # 04-20 covers 9 AM PKT to 1 AM PKT
-    # 21:00 covers the start of your 2 AM hour
+    # 04-21 UTC covers roughly 9 AM PKT to 2 AM PKT
     - cron: '*/30 4-21 * * *'
 
 jobs:
@@ -27,13 +25,18 @@ jobs:
           WA_TOKEN: ${{ secrets.WA_TOKEN }}
           MY_PHONE: ${{ secrets.MY_PHONE }}
         run: |
-          # 1. Install
+          # 1. Install all necessary libraries
           python -m pip install --upgrade pip
-          python -m pip install python-jobspy requests pandas
+          # ADDED openpyxl HERE to fix the crash
+          python -m pip install python-jobspy requests pandas openpyxl
           
-          # 2. Locate for the log
-          echo "--- PIP LOCATION ---"
-          pip show python-jobspy | grep Location
-          
-          # 3. Run
+          # 2. Run the script
           python main.py
+
+      # 3. OPTIONAL: Save the Excel file to GitHub so you can download it
+      - name: Upload Job Excel
+        if: always() # Runs even if the script has a minor error
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-job-results
+          path: Jobs_*.xlsx
