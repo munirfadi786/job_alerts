@@ -261,79 +261,64 @@ def run_job_search():
 
 
 
-
-
 # --- 2. PROCESSING ---
     if all_results:
-        # Combine all results and remove duplicates based on the URL
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         
-        # 1. Save to Excel (Safe Mode)
-        # This is wrapped in try/except so if 'openpyxl' is missing, the script doesn't crash
+        # Save Excel (Safe Mode)
         try:
-            today = datetime.now().strftime("%Y-%m-%d_%H-%M")
+            today = datetime.now().strftime("%Y-%m-%d")
             excel_file = f"Jobs_{today}.xlsx"
             df_all.to_excel(excel_file, index=False)
             print(f"✅ Excel saved: {excel_file}")
         except Exception as e:
-            print(f"⚠️ Excel save failed (likely missing openpyxl): {e}")
+            print(f"⚠️ Excel save skipped: {e}")
 
-        # 2. CONSOLE OUTPUT (Every job found before filtering)
-        print("\n--- CONSOLE LOG: RAW JOBS ---")
-        for _, row in df_all.iterrows():
-            print(f"[{row.get('site', 'job')}] {row['title']} | {row['company']} | {row['location']}")
-
-        # 3. NOISE FILTER
-        # Keep only roles matching your interests
-        good_keys = 'devops|sre|reliability|platform|infrastructure|cloud engineer|kubernetes|developer|fullstack|node|python|django|mern'
-        df_all = df_all[df_all['title'].str.contains(good_keys, case=False, na=False)]
-        
-        # Remove noisy data roles
-        bad_keys = 'cientist|testare'
-        df_all = df_all[~df_all['title'].str.contains(bad_keys, case=False, na=False)]
-
+        # --- NOISE FILTER & CATEGORIZATION ---
         df_all['location'] = df_all['location'].fillna('').astype(str)
-
-        # 4. WHATSAPP GROUPING
-        is_local = df_all['location'].str.contains('Lahore|Pakistan|Islamabad|Karachi', case=False, na=False)
-        is_europe = df_all['location'].str.contains('Sweden|Stockholm|Gothenburg|Luxembourg|France|Paris|Lyon|Germany|Berlin|Munich|Hamburg|Frankfurt|Italy|Spain|Austria|Canada', case=False, na=False)
-
-        # 5. BUILD MESSAGE
-        msg = ["🚀 *LATEST TECH JOBS*"]
         
-        # Section A: Local & Remote Pakistan
-        msg.append("\n📍 *LAHORE & PK REMOTE*")
-        local_df = df_all[is_local]
-        if not local_df.empty:
-            for _, row in local_df.iterrows():
-                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} ({row['site']})\n🔗 {row['job_url']}\n")
-        else:
-            msg.append("_No local jobs found._\n")
+        # Define filters based on your lists at the top
+        cloud_regex = 'devops|sre|reliability|platform|infrastructure|cloud|kubernetes|azure|aws'
+        dev_regex = 'fullstack|node|python|django|mern|developer'
+        
+        # Create separate DataFrames
+        df_cloud = df_all[df_all['title'].str.contains(cloud_regex, case=False, na=False)]
+        df_dev = df_all[df_all['title'].str.contains(dev_regex, case=False, na=False)]
+        
+        # --- 3. BUILD MESSAGE ---
+        msg = ["🚀 *NEW JOB ALERTS*"]
 
-        # Section B: International
-        msg.append("---\n🌍 *INTERNATIONAL (EU/CA/REMOTE)*")
-        euro_df = df_all[is_europe]
-        if not euro_df.empty:
-            for _, row in euro_df.iterrows():
+        # SECTION 1: CLOUD & DEVOPS
+        msg.append("\n☁️ *CLOUD & DEVOPS ROLES*")
+        if not df_cloud.empty:
+            for _, row in df_cloud.iterrows():
                 msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
         else:
-            msg.append("_No international jobs found._\n")
+            msg.append("_No Cloud jobs found in this run._\n")
+
+        msg.append("---")
+
+        # SECTION 2: SOFTWARE DEVELOPMENT
+        msg.append("\n💻 *SOFTWARE & DEV ROLES*")
+        if not df_dev.empty:
+            for _, row in df_dev.iterrows():
+                msg.append(f"🔹 *{row['title']}*\n🏢 {row['company']} | 📍 {row['location']}\n🔗 {row['job_url']}\n")
+        else:
+            msg.append("_No Dev jobs found in this run._\n")
 
         final_msg = "\n".join(msg)
 
-        # 6. SEND WHATSAPP
+        # --- 4. SEND ---
         if wa_id and wa_token and phone:
             url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-            try:
-                response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
-                print(f"📡 WhatsApp Status: {response.status_code}")
-            except Exception as e:
-                print(f"❌ WhatsApp API Error: {e}")
+            response = requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
+            print(f"📡 WhatsApp Status: {response.status_code}")
         else:
-            print("❌ WhatsApp Secrets missing. Skipping message.")
+            print("❌ Secret keys missing. Message not sent.")
             
     else:
         print("📭 No jobs found.")
 
+        
 if __name__ == "__main__":
     run_job_search()
