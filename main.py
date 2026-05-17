@@ -378,6 +378,9 @@ def run_job_search():
     
     RESULTS_WANTED = 1000
     HOURS_OLD = 3
+    REMOTE_HOURS_OLD = 2
+    
+
 
     # A: LinkedIn Lahore
     try:
@@ -433,7 +436,7 @@ def run_job_search():
                           search_term=REMOTE_CLOUD_TERM,
                           location="Worldwide",
                           is_remote=True,
-                          results_wanted=RESULTS_WANTED, hours_old=HOURS_OLD)
+                          results_wanted=RESULTS_WANTED, hours_old=REMOTE_HOURS_OLD)
         if not res.empty:
             # Tag them explicitly so they can be identified later during processing
             res['is_global_remote_target'] = True
