@@ -49,7 +49,69 @@ def run_job_search():
     # PRIORITY 1: GLOBAL REMOTE (Only DevOps & Cloud)
     # ==========================================
     
+    # # Global Remote: LinkedIn
+    # try:
+    #     print("🔍 Searching: Global Remote [LinkedIn]...")
+    #     res = scrape_jobs(site_name=["linkedin"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD,
+    #                       country_indeed='worldwide')
+    #     if not res.empty:
+    #         res['is_global_remote_target'] = True
+    #         all_results.append(res)
+    # except Exception as e: print(f"⚠️ Global Remote LinkedIn Error: {e}")
+
+    # # Global Remote: Indeed
+    # try:
+    #     print("🔍 Searching: Global Remote [Indeed]...")
+    #     res = scrape_jobs(site_name=["indeed"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD,
+    #                       country_indeed='worldwide')
+    #     if not res.empty:
+    #         res['is_global_remote_target'] = True
+    #         all_results.append(res)
+    # except Exception as e: print(f"⚠️ Global Remote Indeed Error: {e}")
+
+    # # Global Remote: ZipRecruiter
+    # try:
+    #     print("🔍 Searching: Global Remote [ZipRecruiter]...")
+    #     res = scrape_jobs(site_name=["zip_recruiter"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD)
+    #     if not res.empty:
+    #         res['is_global_remote_target'] = True
+    #         all_results.append(res)
+    # except Exception as e: print(f"⚠️ Global Remote ZipRecruiter Error: {e}")
+
+    # # Global Remote: Glassdoor
+    # try:
+    #     print("🔍 Searching: Global Remote [Glassdoor]...")
+    #     res = scrape_jobs(site_name=["glassdoor"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD)
+    #     if not res.empty:
+    #         res['is_global_remote_target'] = True
+    #         all_results.append(res)
+    # except Exception as e: print(f"⚠️ Global Remote Glassdoor Error: {e}")
+# ==========================================
+    # PRIORITY 1: GLOBAL REMOTE (Only DevOps & Cloud)
+    # ==========================================
+    
     # Global Remote: LinkedIn
+    res = pd.DataFrame() # Initialize as empty
     try:
         print("🔍 Searching: Global Remote [LinkedIn]...")
         res = scrape_jobs(site_name=["linkedin"],
@@ -59,12 +121,13 @@ def run_job_search():
                           results_wanted=RESULTS_WANTED, 
                           hours_old=REMOTE_HOURS_OLD,
                           country_indeed='worldwide')
-        if not res.empty:
-            res['is_global_remote_target'] = True
-            all_results.append(res)
-    except Exception as e: print(f"⚠️ Global Remote LinkedIn Error: {e}")
+    except Exception as e: print(f"⚠️ Global Remote LinkedIn Error (Bypassing): {e}")
+    if not res.empty:
+        res['is_global_remote_target'] = True
+        all_results.append(res)
 
     # Global Remote: Indeed
+    res = pd.DataFrame() # Reset for next search
     try:
         print("🔍 Searching: Global Remote [Indeed]...")
         res = scrape_jobs(site_name=["indeed"],
@@ -74,12 +137,13 @@ def run_job_search():
                           results_wanted=RESULTS_WANTED, 
                           hours_old=REMOTE_HOURS_OLD,
                           country_indeed='worldwide')
-        if not res.empty:
-            res['is_global_remote_target'] = True
-            all_results.append(res)
-    except Exception as e: print(f"⚠️ Global Remote Indeed Error: {e}")
+    except Exception as e: print(f"⚠️ Global Remote Indeed Error (Bypassing): {e}")
+    if not res.empty:
+        res['is_global_remote_target'] = True
+        all_results.append(res)
 
     # Global Remote: ZipRecruiter
+    res = pd.DataFrame()
     try:
         print("🔍 Searching: Global Remote [ZipRecruiter]...")
         res = scrape_jobs(site_name=["zip_recruiter"],
@@ -88,12 +152,13 @@ def run_job_search():
                           is_remote=True,
                           results_wanted=RESULTS_WANTED, 
                           hours_old=REMOTE_HOURS_OLD)
-        if not res.empty:
-            res['is_global_remote_target'] = True
-            all_results.append(res)
-    except Exception as e: print(f"⚠️ Global Remote ZipRecruiter Error: {e}")
+    except Exception as e: print(f"⚠️ Global Remote ZipRecruiter Error (Bypassing): {e}")
+    if not res.empty:
+        res['is_global_remote_target'] = True
+        all_results.append(res)
 
     # Global Remote: Glassdoor
+    res = pd.DataFrame()
     try:
         print("🔍 Searching: Global Remote [Glassdoor]...")
         res = scrape_jobs(site_name=["glassdoor"],
@@ -102,11 +167,10 @@ def run_job_search():
                           is_remote=True,
                           results_wanted=RESULTS_WANTED, 
                           hours_old=REMOTE_HOURS_OLD)
-        if not res.empty:
-            res['is_global_remote_target'] = True
-            all_results.append(res)
-    except Exception as e: print(f"⚠️ Global Remote Glassdoor Error: {e}")
-
+    except Exception as e: print(f"⚠️ Global Remote Glassdoor Error (Bypassing): {e}")
+    if not res.empty:
+        res['is_global_remote_target'] = True
+        all_results.append(res)
 
     # ==========================================
     # PRIORITY 2: COUNTRY SPECIFIC SEARCHES
