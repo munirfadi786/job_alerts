@@ -179,7 +179,7 @@ def run_job_search():
                 results_wanted=RESULTS_WANTED,
                 hours_old=REMOTE_HOURS_OLD,
                 # DO THIS
-                country_indeed=country_name
+                country_indeed=code
             )
             
             if not res.empty:
