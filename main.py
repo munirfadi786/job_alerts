@@ -88,109 +88,109 @@ def run_job_search():
     #     all_results.append(res)
 
     # List of countries/locations you want to target on LinkedIn
-linkedin_locations = [
-    "argentina", "australia", "austria", "bahrain", "belgium", 
-    "bulgaria", "brazil", "canada", "chile", "colombia", "costa rica", 
-    "croatia", "cyprus", "czech republic", "czechia", "denmark", "ecuador", 
-    "egypt", "estonia", "finland", "france", "germany", "greece", "hong kong", 
-    "hungary", "indonesia", "ireland", "israel", "italy", "japan", 
-    "kuwait", "latvia", "lithuania", "luxembourg", "malaysia", "malta", "mexico", 
-    "morocco", "netherlands", "new zealand", "nigeria", "norway", "oman", 
-     "panama", "peru", "philippines", "poland", "portugal", "qatar", 
-    "romania", "saudi arabia", "singapore", "slovakia", "slovenia", "south africa", 
-    "south korea", "spain", "sweden", "switzerland", "taiwan", "thailand", 
-    "türkiye", "turkey", "united arab emirates",  "united kingdom" , "uruguay", "venezuela", "vietnam"
-    # ... add as many as you like
-]
-
-for loc in linkedin_locations:
-    try:
-        print(f"🔍 Searching LinkedIn for: {loc}...")
-        
-        # We pass 'loc' directly into the 'location' parameter
-        # We do NOT use country_indeed here
-        res = safe_scrape(
-            label=f"LinkedIn {loc}",
-            site_name=["linkedin"],
-            search_term=SEARCH_TERM,
-            location=loc,
-            is_remote=True,
-            results_wanted=RESULTS_WANTED,
-            hours_old=HOURS_OLD
-        )
-        
-        if not res.empty:
-            res['is_global_remote_target'] = False
-            all_results.append(res)
-            
-    except Exception as e:
-        # If LinkedIn rejects the location string (e.g., it doesn't recognize the name),
-        # this catches the error, prints it, and moves to the next location.
-        print(f"⚠️ Skipping {loc} on LinkedIn: {e}")
-        continue
+    linkedin_locations = [
+        "argentina", "australia", "austria", "bahrain", "belgium", 
+        "bulgaria", "brazil", "canada", "chile", "colombia", "costa rica", 
+        "croatia", "cyprus", "czech republic", "czechia", "denmark", "ecuador", 
+        "egypt", "estonia", "finland", "france", "germany", "greece", "hong kong", 
+        "hungary", "indonesia", "ireland", "israel", "italy", "japan", 
+        "kuwait", "latvia", "lithuania", "luxembourg", "malaysia", "malta", "mexico", 
+        "morocco", "netherlands", "new zealand", "nigeria", "norway", "oman", 
+         "panama", "peru", "philippines", "poland", "portugal", "qatar", 
+        "romania", "saudi arabia", "singapore", "slovakia", "slovenia", "south africa", 
+        "south korea", "spain", "sweden", "switzerland", "taiwan", "thailand", 
+        "türkiye", "turkey", "united arab emirates",  "united kingdom" , "uruguay", "venezuela", "vietnam"
+        # ... add as many as you like
+    ]
     
-    # # --- Indeed Search (Use country_indeed here) ---
-    # res = safe_scrape("Global Remote [Indeed]", 
-    #                   site_name=["indeed"], 
-    #                   search_term=REMOTE_CLOUD_TERM, 
-    #                   location="Remote", 
-    #                   is_remote=True, 
-    #                   results_wanted=RESULTS_WANTED, 
-    #                   hours_old=REMOTE_HOURS_OLD, 
-    #                   country_indeed='worldwide')
-    # if not res.empty:
-    #     res['is_global_remote_target'] = True
-    #     all_results.append(res)
-
-    INDEED_CODE_MAP = {
-    "argentina": "ar", "australia": "au", "austria": "at", "bahrain": "bh", 
-    "belgium": "be", "bulgaria": "bg", "brazil": "br", "canada": "ca", 
-    "chile": "cl", "colombia": "co", "croatia": "hr", "cyprus": "cy", 
-    "czech republic": "cz", "denmark": "dk", "ecuador": "ec", "egypt": "eg", 
-    "estonia": "ee", "finland": "fi", "france": "fr", "germany": "de", 
-    "greece": "gr", "hong kong": "hk", "hungary": "hu", "indonesia": "id", 
-    "ireland": "ie", "israel": "il", "italy": "it", "japan": "jp", 
-    "kuwait": "kw", "luxembourg": "lu", "malaysia": "my", "malta": "mt", 
-    "mexico": "mx", "morocco": "ma", "netherlands": "nl", "new zealand": "nz", 
-    "nigeria": "ng", "norway": "no", "oman": "om", "panama": "pa", 
-    "peru": "pe", "philippines": "ph", "poland": "pl", "portugal": "pt", 
-    "qatar": "qa", "romania": "ro", "saudi arabia": "sa", "singapore": "sg", 
-    "slovakia": "sk", "slovenia": "si", "south africa": "za", "south korea": "kr", 
-    "spain": "es", "sweden": "se", "switzerland": "ch", "taiwan": "tw", 
-    "thailand": "th", "turkey": "tr", "united arab emirates": "ae", 
-    "united kingdom": "gb", "united states": "us", "uruguay": "uy", 
-    "venezuela": "ve", "vietnam": "vn", "pakistan": "pk"
-}
-
-# --- Indeed Dynamic Loop ---
-# Replace your single Global Remote Indeed call with this:
-for country_name, code in INDEED_CODE_MAP.items():
-    try:
-        print(f"🔍 Searching Indeed for: {country_name} ({code})...")
-        
-        # Scrape Indeed using the ISO code
-        res = safe_scrape(
-            label=f"Indeed {country_name}",
-            site_name=["indeed"],
-            search_term=REMOTE_CLOUD_TERM,
-            location="Remote",
-            is_remote=True,
-            results_wanted=RESULTS_WANTED,
-            hours_old=REMOTE_HOURS_OLD,
-            country_indeed=code 
-        )
-        
-        if not res.empty:
-            res['is_global_remote_target'] = True
-            all_results.append(res)
+    for loc in linkedin_locations:
+        try:
+            print(f"🔍 Searching LinkedIn for: {loc}...")
             
-        # Crucial: Sleep to prevent IP blocking/403 errors
-        time.sleep(3) 
+            # We pass 'loc' directly into the 'location' parameter
+            # We do NOT use country_indeed here
+            res = safe_scrape(
+                label=f"LinkedIn {loc}",
+                site_name=["linkedin"],
+                search_term=SEARCH_TERM,
+                location=loc,
+                is_remote=True,
+                results_wanted=RESULTS_WANTED,
+                hours_old=HOURS_OLD
+            )
             
-    except Exception as e:
-        print(f"⚠️ Skipping Indeed {country_name}: {e}")
-        continue
-
+            if not res.empty:
+                res['is_global_remote_target'] = False
+                all_results.append(res)
+                
+        except Exception as e:
+            # If LinkedIn rejects the location string (e.g., it doesn't recognize the name),
+            # this catches the error, prints it, and moves to the next location.
+            print(f"⚠️ Skipping {loc} on LinkedIn: {e}")
+            continue
+        
+        # # --- Indeed Search (Use country_indeed here) ---
+        # res = safe_scrape("Global Remote [Indeed]", 
+        #                   site_name=["indeed"], 
+        #                   search_term=REMOTE_CLOUD_TERM, 
+        #                   location="Remote", 
+        #                   is_remote=True, 
+        #                   results_wanted=RESULTS_WANTED, 
+        #                   hours_old=REMOTE_HOURS_OLD, 
+        #                   country_indeed='worldwide')
+        # if not res.empty:
+        #     res['is_global_remote_target'] = True
+        #     all_results.append(res)
+    
+        INDEED_CODE_MAP = {
+        "argentina": "ar", "australia": "au", "austria": "at", "bahrain": "bh", 
+        "belgium": "be", "bulgaria": "bg", "brazil": "br", "canada": "ca", 
+        "chile": "cl", "colombia": "co", "croatia": "hr", "cyprus": "cy", 
+        "czech republic": "cz", "denmark": "dk", "ecuador": "ec", "egypt": "eg", 
+        "estonia": "ee", "finland": "fi", "france": "fr", "germany": "de", 
+        "greece": "gr", "hong kong": "hk", "hungary": "hu", "indonesia": "id", 
+        "ireland": "ie", "israel": "il", "italy": "it", "japan": "jp", 
+        "kuwait": "kw", "luxembourg": "lu", "malaysia": "my", "malta": "mt", 
+        "mexico": "mx", "morocco": "ma", "netherlands": "nl", "new zealand": "nz", 
+        "nigeria": "ng", "norway": "no", "oman": "om", "panama": "pa", 
+        "peru": "pe", "philippines": "ph", "poland": "pl", "portugal": "pt", 
+        "qatar": "qa", "romania": "ro", "saudi arabia": "sa", "singapore": "sg", 
+        "slovakia": "sk", "slovenia": "si", "south africa": "za", "south korea": "kr", 
+        "spain": "es", "sweden": "se", "switzerland": "ch", "taiwan": "tw", 
+        "thailand": "th", "turkey": "tr", "united arab emirates": "ae", 
+        "united kingdom": "gb", "united states": "us", "uruguay": "uy", 
+        "venezuela": "ve", "vietnam": "vn", "pakistan": "pk"
+    }
+    
+    # --- Indeed Dynamic Loop ---
+    # Replace your single Global Remote Indeed call with this:
+    for country_name, code in INDEED_CODE_MAP.items():
+        try:
+            print(f"🔍 Searching Indeed for: {country_name} ({code})...")
+            
+            # Scrape Indeed using the ISO code
+            res = safe_scrape(
+                label=f"Indeed {country_name}",
+                site_name=["indeed"],
+                search_term=REMOTE_CLOUD_TERM,
+                location="Remote",
+                is_remote=True,
+                results_wanted=RESULTS_WANTED,
+                hours_old=REMOTE_HOURS_OLD,
+                country_indeed=code 
+            )
+            
+            if not res.empty:
+                res['is_global_remote_target'] = True
+                all_results.append(res)
+                
+            # Crucial: Sleep to prevent IP blocking/403 errors
+            time.sleep(3) 
+                
+        except Exception as e:
+            print(f"⚠️ Skipping Indeed {country_name}: {e}")
+            continue
+    
     # ==========================================
     # PRIORITY 2: COUNTRY SPECIFIC SEARCHES
     # ==========================================
