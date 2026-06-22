@@ -4,6 +4,17 @@ import requests
 import pandas as pd
 from datetime import datetime
 
+
+def safe_scrape(label, **kwargs):
+    """Helper to catch errors during scraping and return an empty DataFrame if it fails."""
+    try:
+        print(f"🔍 Searching: {label}...")
+        res = scrape_jobs(**kwargs)
+        return res if res is not None else pd.DataFrame()
+    except Exception as e:
+        print(f"⚠️ Error in {label} (Bypassing): {e}")
+        return pd.DataFrame()
+        
 def run_job_search():
     # 1. Print Debug Information
     print("--- DEBUGGING ENVIRONMENT ---")
@@ -109,35 +120,61 @@ def run_job_search():
 # ==========================================
     # PRIORITY 1: GLOBAL REMOTE (Only DevOps & Cloud)
     # ==========================================
+
     
-    # Global Remote: LinkedIn
-    res = pd.DataFrame() # Initialize as empty
-    try:
-        print("🔍 Searching: Global Remote [LinkedIn]...")
-        res = scrape_jobs(site_name=["linkedin"],
-                          search_term=REMOTE_CLOUD_TERM,
-                          location="Worldwide",
-                          is_remote=True,
-                          results_wanted=RESULTS_WANTED, 
-                          hours_old=REMOTE_HOURS_OLD,
-                          country_indeed='worldwide')
-    except Exception as e: print(f"⚠️ Global Remote LinkedIn Error (Bypassing): {e}")
-    if not res.empty:
-        res['is_global_remote_target'] = True
-        all_results.append(res)
+    # # Global Remote: LinkedIn
+    # res = pd.DataFrame() # Initialize as empty
+    # try:
+    #     print("🔍 Searching: Global Remote [LinkedIn]...")
+    #     res = scrape_jobs(site_name=["linkedin"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD,
+    #                       country_indeed='worldwide')
+    # except Exception as e: print(f"⚠️ Global Remote LinkedIn Error (Bypassing): {e}")
+    # if not res.empty:
+    #     res['is_global_remote_target'] = True
+    #     all_results.append(res)
+    
 
     # Global Remote: Indeed
-    res = pd.DataFrame() # Reset for next search
-    try:
-        print("🔍 Searching: Global Remote [Indeed]...")
-        res = scrape_jobs(site_name=["indeed"],
-                          search_term=REMOTE_CLOUD_TERM,
-                          location="Worldwide",
-                          is_remote=True,
-                          results_wanted=RESULTS_WANTED, 
-                          hours_old=REMOTE_HOURS_OLD,
-                          country_indeed='worldwide')
-    except Exception as e: print(f"⚠️ Global Remote Indeed Error (Bypassing): {e}")
+    # res = pd.DataFrame() # Reset for next search
+    # try:
+    #     print("🔍 Searching: Global Remote [Indeed]...")
+    #     res = scrape_jobs(site_name=["indeed"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD,
+    #                       country_indeed='worldwide')
+    # except Exception as e: print(f"⚠️ Global Remote Indeed Error (Bypassing): {e}")
+    # if not res.empty:
+    #     res['is_global_remote_target'] = True
+    #     all_results.append(res)
+
+    res = safe_scrape("Global Remote [LinkedIn]", 
+                  site_name=["linkedin"], 
+                  search_term=REMOTE_CLOUD_TERM, 
+                  location="Worldwide", 
+                  is_remote=True, 
+                  results_wanted=RESULTS_WANTED, 
+                      hours_old=REMOTE_HOURS_OLD)
+    if not res.empty:    
+        res['is_global_remote_target'] = True
+        all_results.append(res)
+    
+    # --- Indeed Search (Use country_indeed here) ---
+    res = safe_scrape("Global Remote [Indeed]", 
+                      site_name=["indeed"], 
+                      search_term=REMOTE_CLOUD_TERM, 
+                      location="Worldwide", 
+                      is_remote=True, 
+                      results_wanted=RESULTS_WANTED, 
+                      hours_old=REMOTE_HOURS_OLD, 
+                      country_indeed='worldwide')
     if not res.empty:
         res['is_global_remote_target'] = True
         all_results.append(res)
