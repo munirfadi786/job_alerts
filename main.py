@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 import pandas as pd
+import time
 from datetime import datetime
 from jobspy import scrape_jobs
 
@@ -177,7 +178,8 @@ def run_job_search():
                 is_remote=True,
                 results_wanted=RESULTS_WANTED,
                 hours_old=REMOTE_HOURS_OLD,
-                country_indeed=code 
+                # DO THIS
+                country_indeed=country_name
             )
             
             if not res.empty:
