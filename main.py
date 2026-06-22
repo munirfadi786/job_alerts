@@ -55,8 +55,8 @@ def run_job_search():
     REMOTE_CLOUD_TERM = " OR ".join(cloud)
     
     RESULTS_WANTED = 1000
-    HOURS_OLD = 3
-    REMOTE_HOURS_OLD = 2
+    HOURS_OLD = 14
+    REMOTE_HOURS_OLD = 20
 
     
     # # Global Remote: LinkedIn
