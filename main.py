@@ -100,7 +100,7 @@ def run_job_search():
          "panama", "peru", "philippines", "poland", "portugal", "qatar", 
         "romania", "saudi arabia", "singapore", "slovakia", "slovenia", "south africa", 
         "south korea", "spain", "sweden", "switzerland", "taiwan", "thailand", 
-        "türkiye", "turkey", "united arab emirates",  "united kingdom" , "uruguay", "venezuela", "vietnam"
+         "united arab emirates", "France", "Germany"
         # ... add as many as you like
     ]
     
