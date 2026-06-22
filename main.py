@@ -99,8 +99,7 @@ linkedin_locations = [
      "panama", "peru", "philippines", "poland", "portugal", "qatar", 
     "romania", "saudi arabia", "singapore", "slovakia", "slovenia", "south africa", 
     "south korea", "spain", "sweden", "switzerland", "taiwan", "thailand", 
-    "türkiye", "turkey", "united arab emirates",  "united kingdom", 
-    , "uruguay", "venezuela", "vietnam"
+    "türkiye", "turkey", "united arab emirates",  "united kingdom" , "uruguay", "venezuela", "vietnam"
     # ... add as many as you like
 ]
 
