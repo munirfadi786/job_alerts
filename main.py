@@ -3,7 +3,7 @@ import sys
 import requests
 import pandas as pd
 from datetime import datetime
-
+from jobspy import scrape_jobs
 
 def safe_scrape(label, **kwargs):
     """Helper to catch errors during scraping and return an empty DataFrame if it fails."""
@@ -33,14 +33,14 @@ def run_job_search():
     print(f"MY_PHONE: {mask(phone)}")
     print("----------------------------")
 
-    # 2. Import Libraries inside the function
-    try:
-        from jobspy import scrape_jobs
-        print("✅ Jobspy loaded successfully!")
-    except ImportError:
-        print("❌ Still failing to load Jobspy. Printing sys.path:")
-        print(sys.path)
-        return
+    # # 2. Import Libraries inside the function
+    # try:
+    #     from jobspy import scrape_jobs
+    #     print("✅ Jobspy loaded successfully!")
+    # except ImportError:
+    #     print("❌ Still failing to load Jobspy. Printing sys.path:")
+    #     print(sys.path)
+    #     return
 
     all_results = []
     cloud = ["DevOps Engineer", "Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "DevSecOps Engineer", "Cloud Infrastructure Engineer", "Automation Engineer", "Kubernetes Engineer", "Azure Engineer", "AWS Engineer"]
