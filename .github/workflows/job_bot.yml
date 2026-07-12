@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 04-21 UTC covers roughly 9 AM PKT to 2 AM PKT
-    - cron: '*/30 4-21 * * *'
+    - cron: '0 * * * *'
 
 jobs:
   build:
