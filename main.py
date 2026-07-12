@@ -111,21 +111,48 @@ def run_job_search():
     # ==========================================
     
     # Global Remote: LinkedIn
-    res = pd.DataFrame() # Initialize as empty
+    # res = pd.DataFrame() # Initialize as empty
+    # try:
+    #     print("🔍 Searching: Global Remote [LinkedIn]...")
+    #     res = scrape_jobs(site_name=["linkedin"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD,
+    #                       country_indeed='worldwide')
+    # except Exception as e: print(f"⚠️ Global Remote LinkedIn Error (Bypassing): {e}")
+    # if not res.empty:
+    #     res['is_global_remote_target'] = True
+    #     all_results.append(res)
+    # Global Remote: LinkedIn (Fixed to iterate over whitelisted countries safely)
     try:
         print("🔍 Searching: Global Remote [LinkedIn]...")
-        res = scrape_jobs(site_name=["linkedin"],
-                          search_term=REMOTE_CLOUD_TERM,
-                          location="Worldwide",
-                          is_remote=True,
-                          results_wanted=RESULTS_WANTED, 
-                          hours_old=REMOTE_HOURS_OLD,
-                          country_indeed='worldwide')
-    except Exception as e: print(f"⚠️ Global Remote LinkedIn Error (Bypassing): {e}")
-    if not res.empty:
-        res['is_global_remote_target'] = True
-        all_results.append(res)
-
+        linkedin_countries = [
+    "usa", "united kingdom", "canada", "australia", 
+    "germany", "netherlands", "singapore", "united arab emirates",
+    "switzerland", "ireland", "luxembourg", "sweden", 
+    "norway", "denmark", "new zealand", "qatar"
+]
+        for target_country in linkedin_countries:
+            
+            res = pd.DataFrame()
+            try:
+                res = scrape_jobs(
+                    site_name=["linkedin"],
+                    search_term=REMOTE_CLOUD_TERM,
+                    location=target_country,
+                    is_remote=True,
+                    results_wanted=RESULTS_WANTED, 
+                    hours_old=REMOTE_HOURS_OLD
+                )
+                if not res.empty:
+                    res['is_global_remote_target'] = True
+                    all_results.append(res)
+            except Exception as country_err:
+                print(f"⚠️ LinkedIn Remote skipped country '{target_country}': {country_err}")
+    except Exception as e: 
+        print(f"⚠️ Global Remote LinkedIn General Error: {e}")
     # Global Remote: Indeed
     res = pd.DataFrame() # Reset for next search
     try:
@@ -300,6 +327,10 @@ def run_job_search():
     if all_results:
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         df_all['location'] = df_all['location'].fillna('').astype(str)
+
+        # Explicitly remove jobs from excluded regions
+        # Explicitly remove jobs from excluded regions
+        df_all = df_all[~df_all['location'].str.contains('bangladesh|north korea|india|sri lanka|nepal|philippines|vietnam|indonesia|russia|belarus|iran|cuba|nigeria|egypt|venezuela', case=False, na=False)]
         if 'is_global_remote_target' not in df_all.columns:
             df_all['is_global_remote_target'] = False
         df_all['is_global_remote_target'] = df_all['is_global_remote_target'].fillna(False)
