@@ -43,7 +43,7 @@ def run_job_search():
     
     RESULTS_WANTED = 1000
     HOURS_OLD = 3
-    REMOTE_HOURS_OLD = 2
+    REMOTE_HOURS_OLD = 1
 
     # ==========================================
     # PRIORITY 1: GLOBAL REMOTE (Only DevOps & Cloud)
