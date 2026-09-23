@@ -369,8 +369,6 @@
 
 # if __name__ == "__main__":
 #     run_job_search()
-
-
 import os
 import sys
 import json
@@ -379,61 +377,29 @@ from email.message import EmailMessage
 import requests
 import pandas as pd
 from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
 
 def sync_to_google_sheet(df):
     if df.empty:
         return
 
-    sa_key_json = os.getenv("GCP_SA_KEY")
-    if not sa_key_json:
-        print("⚠️ GCP_SA_KEY secret not found. Skipping Google Sheets sync.")
+    script_url = os.getenv("GOOGLE_SCRIPT_URL")
+    if not script_url:
+        print("⚠️ GOOGLE_SCRIPT_URL secret not found. Skipping Google Sheets sync.")
         return
 
     try:
-        scope = [
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
-        
-        creds_dict = json.loads(sa_key_json)
-        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-        client = gspread.authorize(creds)
-
-        sheet_url = "https://docs.google.com/spreadsheets/d/1i0DDhqTZaq5Vyn2tLzAo3xX-p4o3BVt-kj1YLmv_fsc/edit?gid=0#gid=0"
-        spreadsheet = client.open_by_url(sheet_url)
-        worksheet = spreadsheet.get_worksheet(0)
-
         df = df.fillna("")
         df['scraped_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        existing_data = worksheet.get_all_values()
         
-        if not existing_data:
-            headers = list(df.columns)
-            worksheet.append_row(headers)
-            existing_data = [headers]
-
-        existing_urls = set()
-        if len(existing_data) > 1:
-            headers = existing_data[0]
-            if 'job_url' in headers:
-                url_idx = headers.index('job_url')
-                existing_urls = {row[url_idx] for row in existing_data[1:] if len(row) > url_idx}
-
-        new_rows = []
-        for _, row in df.iterrows():
-            job_url = row.get('job_url', '')
-            if job_url not in existing_urls:
-                new_rows.append(list(row.values))
-
-        if not new_rows:
-            print("ℹ️ No new unique jobs to push to Google Sheets.")
-            return
-
-        worksheet.insert_rows(new_rows, row=2, value_input_option='USER_ENTERED')
-        print(f"✅ Successfully added {len(new_rows)} new jobs to the top of Google Sheets!")
+        # Convert dataframe rows into a list of lists to send to Apps Script
+        headers = list(df.columns)
+        rows = [headers] + df.values.tolist()
+        
+        response = requests.post(script_url, json=rows)
+        if response.status_code == 200:
+            print(f"✅ Successfully pushed {len(df)} jobs to Google Sheets via Web App!")
+        else:
+            print(f"⚠️ Failed to push to Google Sheets. Response: {response.text}")
     except Exception as e:
         print(f"⚠️ Error syncing to Google Sheets: {e}")
 
@@ -686,6 +652,34 @@ def run_job_search():
         final_msg = "\n".join(msg)
 
         # 4. SEND OUTPUT (Excel, Google Sheets, Email, WhatsApp)
+        try:
+            today = datetime.now().strftime("%Y-%m-%d")
+            excel_filename = f"Jobs_{today}.xlsx"
+            
+            # Clean DataFrame for exports
+            df_to_export = df_all.drop(columns=['is_global_remote_target'], errors='ignore')
+            df_to_export.to_excel(excel_filename, index=False)
+            
+            # Sync to Google Sheets (Newest on top via Web App)
+            sync_to_google_sheet(df_to_export)
+            
+            # Send Email Report with Attachment
+            send_email_report(excel_filename)
+            
+            # Send WhatsApp Message
+            if wa_id and wa_token and phone:
+                url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+                requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
+                print("✅ WhatsApp Report Sent Successfully")
+                
+        except Exception as e:
+            print(f"⚠️ Error during output delivery: {e}")
+            
+    else:
+        print("📭 No jobs found.")
+
+if __name__ == "__main__":
+    run_job_search()
         try:
             today = datetime.now().strftime("%Y-%m-%d")
             excel_filename = f"Jobs_{today}.xlsx"
