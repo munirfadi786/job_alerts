@@ -408,17 +408,22 @@ import json
 
 # Your deployed Google Apps Script Web App URL
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQrqqp3rYudT41MyCxCbDQ-SDOii3zySDNNDiiVkuld8hAinzjcLbloEyJxyH8myo6Zg/exec"
+
+
+
 def send_to_google_sheet(df):
     if df.empty:
         print("⚠️ No data to send to Google Sheets.")
         return
 
-    # Drop any date or datetime columns so we don't hit JSON serialization errors
+    # Clean the dataframe by dropping raw date/datetime objects that cause JSON errors
     df_clean = df.select_dtypes(exclude=['datetime64', 'datetimetz']).copy()
-    
-    # Also drop columns whose names contain 'date' just to be safe
     cols_to_drop = [col for col in df_clean.columns if 'date' in col.lower()]
     df_clean = df_clean.drop(columns=cols_to_drop, errors='ignore')
+
+    # ADD A CLEAN FORMATTED DATE & TIME COLUMN (Day-Month-Year format)
+    # This creates a string like "23-09-2026 23:24:02" so it won't break JSON and is easy to read
+    df_clean['Sync_Date_Time'] = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
     # Convert DataFrame to a list of lists (including headers)
     data_to_send = [df_clean.columns.tolist()] + df_clean.values.tolist()
@@ -428,6 +433,7 @@ def send_to_google_sheet(df):
         print(f"📡 Google Sheet Response: {response.text}")
     except Exception as e:
         print(f"❌ Error sending data to Google Sheet: {e}")
+
 
 def send_email_report(excel_filename):
     sender_email = os.getenv("EMAIL_SENDER")
