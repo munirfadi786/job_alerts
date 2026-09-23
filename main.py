@@ -408,14 +408,19 @@ import json
 
 # Your deployed Google Apps Script Web App URL
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQrqqp3rYudT41MyCxCbDQ-SDOii3zySDNNDiiVkuld8hAinzjcLbloEyJxyH8myo6Zg/exec"
-
 def send_to_google_sheet(df):
     if df.empty:
         print("⚠️ No data to send to Google Sheets.")
         return
 
+    # Convert any date/datetime columns to strings to prevent JSON serialization errors
+    df_copy = df.copy()
+    for col in df_copy.columns:
+        if pd.api.types.is_datetime64_any_dtype(df_copy[col]) or 'date' in str(df_copy[col].dtype).lower():
+            df_copy[col] = df_copy[col].astype(str)
+
     # Convert DataFrame to a list of lists (including headers)
-    data_to_send = [df.columns.tolist()] + df.values.tolist()
+    data_to_send = [df_copy.columns.tolist()] + df_copy.values.tolist()
     
     try:
         response = requests.post(WEB_APP_URL, json=data_to_send)
