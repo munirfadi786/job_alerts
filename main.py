@@ -262,6 +262,11 @@ def run_job_search():
                     msg.append("---")
 
         final_msg = "\n".join(msg)
+                    # Print all scraped jobs to the runner logs for debugging
+        if 'df_all' in locals() and not df_all.empty:
+            print(f"📊 TOTAL UNIQUE JOBS FOUND: {len(df_all)}")
+            for _, row in df_all.iterrows():
+                print(f"JOB: {row.get('title')} | COMPANY: {row.get('company')} | SITE: {row.get('site')} | LOC: {row.get('location')}")
 
         # 4. SEND OUTPUT
         if wa_id and wa_token and phone:
