@@ -413,14 +413,15 @@ def send_to_google_sheet(df):
         print("⚠️ No data to send to Google Sheets.")
         return
 
-    # Convert any date/datetime columns to strings to prevent JSON serialization errors
-    df_copy = df.copy()
-    for col in df_copy.columns:
-        if pd.api.types.is_datetime64_any_dtype(df_copy[col]) or 'date' in str(df_copy[col].dtype).lower():
-            df_copy[col] = df_copy[col].astype(str)
+    # Drop any date or datetime columns so we don't hit JSON serialization errors
+    df_clean = df.select_dtypes(exclude=['datetime64', 'datetimetz']).copy()
+    
+    # Also drop columns whose names contain 'date' just to be safe
+    cols_to_drop = [col for col in df_clean.columns if 'date' in col.lower()]
+    df_clean = df_clean.drop(columns=cols_to_drop, errors='ignore')
 
     # Convert DataFrame to a list of lists (including headers)
-    data_to_send = [df_copy.columns.tolist()] + df_copy.values.tolist()
+    data_to_send = [df_clean.columns.tolist()] + df_clean.values.tolist()
     
     try:
         response = requests.post(WEB_APP_URL, json=data_to_send)
