@@ -30,9 +30,23 @@ jobs:
           # ADDED openpyxl HERE to fix the crash
           python -m pip install python-jobspy requests pandas openpyxl
           
+      - name: Force Install and Run
+        env:
+          WA_INSTANCE_ID: ${{ secrets.WA_INSTANCE_ID }}
+          WA_TOKEN: ${{ secrets.WA_TOKEN }}
+          MY_PHONE: ${{ secrets.MY_PHONE }}
+          # Make sure to also add your Google service account secret here if your code looks for it as an environment variable!
+          GOOGLE_SCRIPT_URL: ${{ secrets.GOOGLE_SCRIPT_URL }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
+        run: |
+          # 1. Install all libraries from requirements.txt
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          
           # 2. Run the script
           python main.py
-
       # 3. OPTIONAL: Save the Excel file to GitHub so you can download it
       - name: Upload Job Excel
         if: always() # Runs even if the script has a minor error
