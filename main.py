@@ -94,34 +94,34 @@ def run_job_search():
         all_results.append(res)
 
     # Global Remote: ZipRecruiter
-    res = pd.DataFrame()
-    try:
-        print("🔍 Searching: Global Remote [ZipRecruiter]...")
-        res = scrape_jobs(site_name=["zip_recruiter"],
-                          search_term=REMOTE_CLOUD_TERM,
-                          location="Worldwide",
-                          is_remote=True,
-                          results_wanted=RESULTS_WANTED, 
-                          hours_old=REMOTE_HOURS_OLD)
-    except Exception as e: print(f"⚠️ Global Remote ZipRecruiter Error (Bypassing): {e}")
-    if not res.empty:
-        res['is_global_remote_target'] = True
-        all_results.append(res)
+    # res = pd.DataFrame()
+    # try:
+    #     print("🔍 Searching: Global Remote [ZipRecruiter]...")
+    #     res = scrape_jobs(site_name=["zip_recruiter"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD)
+    # except Exception as e: print(f"⚠️ Global Remote ZipRecruiter Error (Bypassing): {e}")
+    # if not res.empty:
+    #     res['is_global_remote_target'] = True
+    #     all_results.append(res)
 
     # Global Remote: Glassdoor
-    res = pd.DataFrame()
-    try:
-        print("🔍 Searching: Global Remote [Glassdoor]...")
-        res = scrape_jobs(site_name=["glassdoor"],
-                          search_term=REMOTE_CLOUD_TERM,
-                          location="Worldwide",
-                          is_remote=True,
-                          results_wanted=RESULTS_WANTED, 
-                          hours_old=REMOTE_HOURS_OLD)
-    except Exception as e: print(f"⚠️ Global Remote Glassdoor Error (Bypassing): {e}")
-    if not res.empty:
-        res['is_global_remote_target'] = True
-        all_results.append(res)
+    # res = pd.DataFrame()
+    # try:
+    #     print("🔍 Searching: Global Remote [Glassdoor]...")
+    #     res = scrape_jobs(site_name=["glassdoor"],
+    #                       search_term=REMOTE_CLOUD_TERM,
+    #                       location="Worldwide",
+    #                       is_remote=True,
+    #                       results_wanted=RESULTS_WANTED, 
+    #                       hours_old=REMOTE_HOURS_OLD)
+    # except Exception as e: print(f"⚠️ Global Remote Glassdoor Error (Bypassing): {e}")
+    # if not res.empty:
+    #     res['is_global_remote_target'] = True
+    #     all_results.append(res)
 
     # ==========================================
     # PRIORITY 2: COUNTRY SPECIFIC SEARCHES
@@ -198,10 +198,100 @@ def run_job_search():
     except Exception as e: print(f"⚠️ Indeed Germany Finance Error: {e}")
 
 
-    # --- PROCESSING ---
+    # # --- PROCESSING ---
+    # if all_results:
+    #     df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
+    #     df_all['location'] = df_all['location'].fillna('').astype(str)
+
+    #     # Explicitly remove jobs from excluded regions
+    #     df_all = df_all[~df_all['location'].str.contains('bangladesh|north korea|india|sri lanka|nepal|philippines|vietnam|indonesia|russia|belarus|iran|cuba|nigeria|egypt|venezuela', case=False, na=False)]
+    #     if 'is_global_remote_target' not in df_all.columns:
+    #         df_all['is_global_remote_target'] = False
+    #     df_all['is_global_remote_target'] = df_all['is_global_remote_target'].fillna(False)
+
+    #     # 1. Define the Skills Filter
+    #     cloud_regex = 'devops|sre|reliability|platform|infrastructure|cloud|kubernetes|azure|aws'
+    #     dev_regex = 'fullstack|node|python|django|mern|developer'
+    #     finance_regex = 'accountant|cashier|finance|financial'
+
+    #     # 2. Layout Structure Priorities
+    #     target_locations = [
+            
+    #         ("🇵🇰 PAKISTAN", "Lahore|Pakistan|Islamabad|Karachi", False),
+    #         ("🇵🇰 PAKISTAN (INDEED)", "Lahore|Pakistan|Islamabad|Karachi", False),
+    #         ("🇦🇪 DUBAI, UAE", "Dubai", False),
+    #         ("🇦🇪 ABU DHABI, UAE", "Abu Dhabi", False),
+    #         ("🇩🇪 GERMANY", "Germany|Berlin|Munich|Hamburg|Frankfurt", False),
+    #         ("🌍 GLOBAL REMOTE (DEVOPS/CLOUD)", "GLOBAL_REMOTE_MARKER", True)
+    #     ]
+
+    #     msg = ["🚀 *JOB REPORT BY LOCATION*"]
+
+    #     # 3. Process Content
+    #     for label, regex, is_global_remote in target_locations:
+    #         if is_global_remote:
+    #             country_df = df_all[df_all['is_global_remote_target'] == True]
+    #         else:
+    #             non_remote_pool = df_all[df_all['is_global_remote_target'] == False]
+    #             country_df = non_remote_pool[non_remote_pool['location'].str.contains(regex, case=False, na=False)]
+            
+    #         if not country_df.empty:
+    #             c_df = country_df[country_df['title'].str.contains(cloud_regex, case=False, na=False)]
+    #             d_df = pd.DataFrame() if is_global_remote else country_df[country_df['title'].str.contains(dev_regex, case=False, na=False)]
+    #             f_df = pd.DataFrame() if is_global_remote else country_df[country_df['title'].str.contains(finance_regex, case=False, na=False)]
+                
+    #             if not c_df.empty or not d_df.empty or not f_df.empty:
+    #                 msg.append(f"\n📍 *{label}*")
+                
+    #             if not c_df.empty:
+    #                 msg.append("   ☁️ *Cloud:*")
+    #                 for _, row in c_df.iterrows():
+    #                     msg.append(f"    • *{row['title']}* @ {row['company']} ({row['site'].upper()})\n     🔗 {row['job_url']}")
+                
+    #             if not d_df.empty:
+    #                 msg.append("   💻 *Dev:*")
+    #                 for _, row in d_df.iterrows():
+    #                     msg.append(f"    • *{row['title']}* @ {row['company']} ({row['site'].upper()})\n     🔗 {row['job_url']}")
+
+    #             if not f_df.empty:
+    #                 msg.append("   📊 *Finance & Accounting:*")
+    #                 for _, row in f_df.iterrows():
+    #                     msg.append(f"    • *{row['title']}* @ {row['company']} ({row['site'].upper()})\n     🔗 {row['job_url']}")
+                
+    #             if not c_df.empty or not d_df.empty or not f_df.empty:
+    #                 msg.append("---")
+
+    #     final_msg = "\n".join(msg)
+    #                 # Print all scraped jobs to the runner logs for debugging
+    #     if 'df_all' in locals() and not df_all.empty:
+    #         print(f"📊 TOTAL UNIQUE JOBS FOUND: {len(df_all)}")
+    #         for _, row in df_all.iterrows():
+    #             print(f"JOB: {row.get('title')} | COMPANY: {row.get('company')} | SITE: {row.get('site')} | LOC: {row.get('location')}")
+
+    #     # 4. SEND OUTPUT
+    #     if wa_id and wa_token and phone:
+    #         url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
+    #         try:
+    #             today = datetime.now().strftime("%Y-%m-%d")
+    #             df_all.drop(columns=['is_global_remote_target'], errors='ignore').to_excel(f"Jobs_{today}.xlsx", index=False)
+                
+    #             requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
+    #             print("✅ Report Sent Successfully")
+    #         except Exception as e:
+    #             print(f"⚠️ Error during output: {e}")
+            
+    # else:
+    #     print("📭 No jobs found.")
+
+# --- PROCESSING ---
     if all_results:
         df_all = pd.concat(all_results).drop_duplicates(subset=['job_url'])
         df_all['location'] = df_all['location'].fillna('').astype(str)
+
+        # Force print raw jobs immediately to GitHub Actions logs
+        print(f"📊 RAW SCRAPED JOBS FOUND: {len(df_all)}", flush=True)
+        for _, row in df_all.iterrows():
+            print(f"JOB: {row.get('title')} | COMPANY: {row.get('company')} | SITE: {row.get('site')} | LOC: {row.get('location')}", flush=True)
 
         # Explicitly remove jobs from excluded regions
         df_all = df_all[~df_all['location'].str.contains('bangladesh|north korea|india|sri lanka|nepal|philippines|vietnam|indonesia|russia|belarus|iran|cuba|nigeria|egypt|venezuela', case=False, na=False)]
@@ -216,7 +306,6 @@ def run_job_search():
 
         # 2. Layout Structure Priorities
         target_locations = [
-            
             ("🇵🇰 PAKISTAN", "Lahore|Pakistan|Islamabad|Karachi", False),
             ("🇵🇰 PAKISTAN (INDEED)", "Lahore|Pakistan|Islamabad|Karachi", False),
             ("🇦🇪 DUBAI, UAE", "Dubai", False),
@@ -244,17 +333,17 @@ def run_job_search():
                     msg.append(f"\n📍 *{label}*")
                 
                 if not c_df.empty:
-                    msg.append("   ☁️ *Cloud:*")
+                    msg.append("    ☁️ *Cloud:*")
                     for _, row in c_df.iterrows():
                         msg.append(f"    • *{row['title']}* @ {row['company']} ({row['site'].upper()})\n     🔗 {row['job_url']}")
                 
                 if not d_df.empty:
-                    msg.append("   💻 *Dev:*")
+                    msg.append("    💻 *Dev:*")
                     for _, row in d_df.iterrows():
                         msg.append(f"    • *{row['title']}* @ {row['company']} ({row['site'].upper()})\n     🔗 {row['job_url']}")
 
                 if not f_df.empty:
-                    msg.append("   📊 *Finance & Accounting:*")
+                    msg.append("    📊 *Finance & Accounting:*")
                     for _, row in f_df.iterrows():
                         msg.append(f"    • *{row['title']}* @ {row['company']} ({row['site'].upper()})\n     🔗 {row['job_url']}")
                 
@@ -262,11 +351,6 @@ def run_job_search():
                     msg.append("---")
 
         final_msg = "\n".join(msg)
-                    # Print all scraped jobs to the runner logs for debugging
-        if 'df_all' in locals() and not df_all.empty:
-            print(f"📊 TOTAL UNIQUE JOBS FOUND: {len(df_all)}")
-            for _, row in df_all.iterrows():
-                print(f"JOB: {row.get('title')} | COMPANY: {row.get('company')} | SITE: {row.get('site')} | LOC: {row.get('location')}")
 
         # 4. SEND OUTPUT
         if wa_id and wa_token and phone:
