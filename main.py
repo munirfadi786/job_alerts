@@ -379,30 +379,49 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-def sync_to_google_sheet(df):
+# def sync_to_google_sheet(df):
+#     if df.empty:
+#         return
+
+#     script_url = os.getenv("GOOGLE_SCRIPT_URL")
+#     if not script_url:
+#         print("⚠️ GOOGLE_SCRIPT_URL secret not found. Skipping Google Sheets sync.")
+#         return
+
+#     try:
+#         df = df.fillna("")
+#         df['scraped_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+#         # Convert dataframe rows into a list of lists to send to Apps Script
+#         headers = list(df.columns)
+#         rows = [headers] + df.values.tolist()
+        
+#         response = requests.post(script_url, json=rows)
+#         if response.status_code == 200:
+#             print(f"✅ Successfully pushed {len(df)} jobs to Google Sheets via Web App!")
+#         else:
+#             print(f"⚠️ Failed to push to Google Sheets. Response: {response.text}")
+#     except Exception as e:
+#         print(f"⚠️ Error syncing to Google Sheets: {e}")
+import requests
+import json
+
+# Your deployed Google Apps Script Web App URL
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQrqqp3rYudT41MyCxCbDQ-SDOii3zySDNNDiiVkuld8hAinzjcLbloEyJxyH8myo6Zg/exec"
+
+def send_to_google_sheet(df):
     if df.empty:
+        print("⚠️ No data to send to Google Sheets.")
         return
 
-    script_url = os.getenv("GOOGLE_SCRIPT_URL")
-    if not script_url:
-        print("⚠️ GOOGLE_SCRIPT_URL secret not found. Skipping Google Sheets sync.")
-        return
-
+    # Convert DataFrame to a list of lists (including headers)
+    data_to_send = [df.columns.tolist()] + df.values.tolist()
+    
     try:
-        df = df.fillna("")
-        df['scraped_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        # Convert dataframe rows into a list of lists to send to Apps Script
-        headers = list(df.columns)
-        rows = [headers] + df.values.tolist()
-        
-        response = requests.post(script_url, json=rows)
-        if response.status_code == 200:
-            print(f"✅ Successfully pushed {len(df)} jobs to Google Sheets via Web App!")
-        else:
-            print(f"⚠️ Failed to push to Google Sheets. Response: {response.text}")
+        response = requests.post(WEB_APP_URL, json=data_to_send)
+        print(f"📡 Google Sheet Response: {response.text}")
     except Exception as e:
-        print(f"⚠️ Error syncing to Google Sheets: {e}")
+        print(f"❌ Error sending data to Google Sheet: {e}")
 
 def send_email_report(excel_filename):
     sender_email = os.getenv("EMAIL_SENDER")
