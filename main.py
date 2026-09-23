@@ -679,7 +679,7 @@ def run_job_search():
             df_to_export = df_all.drop(columns=['is_global_remote_target'], errors='ignore')
             df_to_export.to_excel(excel_filename, index=False)
             
-            sync_to_google_sheet(df_to_export)
+            send_to_google_sheet(df_to_export)
             send_email_report(excel_filename)
             
             if wa_id and wa_token and phone:
