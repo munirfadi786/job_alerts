@@ -369,6 +369,7 @@
 
 # if __name__ == "__main__":
 #     run_job_search()
+
 import os
 import sys
 import json
@@ -656,17 +657,12 @@ def run_job_search():
             today = datetime.now().strftime("%Y-%m-%d")
             excel_filename = f"Jobs_{today}.xlsx"
             
-            # Clean DataFrame for exports
             df_to_export = df_all.drop(columns=['is_global_remote_target'], errors='ignore')
             df_to_export.to_excel(excel_filename, index=False)
             
-            # Sync to Google Sheets (Newest on top via Web App)
             sync_to_google_sheet(df_to_export)
-            
-            # Send Email Report with Attachment
             send_email_report(excel_filename)
             
-            # Send WhatsApp Message
             if wa_id and wa_token and phone:
                 url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
                 requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
@@ -680,32 +676,3 @@ def run_job_search():
 
 if __name__ == "__main__":
     run_job_search()
-        try:
-            today = datetime.now().strftime("%Y-%m-%d")
-            excel_filename = f"Jobs_{today}.xlsx"
-            
-            # Clean DataFrame for exports
-            df_to_export = df_all.drop(columns=['is_global_remote_target'], errors='ignore')
-            df_to_export.to_excel(excel_filename, index=False)
-            
-            # Sync to Google Sheets (Newest on top)
-            sync_to_google_sheet(df_to_export)
-            
-            # Send Email Report with Attachment
-            send_email_report(excel_filename)
-            
-            # Send WhatsApp Message
-            if wa_id and wa_token and phone:
-                url = f"https://7103.api.greenapi.com/waInstance{wa_id}/sendMessage/{wa_token}"
-                requests.post(url, json={"chatId": f"{phone}@c.us", "message": final_msg})
-                print("✅ WhatsApp Report Sent Successfully")
-                
-        except Exception as e:
-            print(f"⚠️ Error during output delivery: {e}")
-            
-    else:
-        print("📭 No jobs found.")
-
-if __name__ == "__main__":
-    run_job_search()
-
